@@ -4,7 +4,7 @@
   <img src="public/favicon.svg" alt="monline logo" width="128" />
 </p>
 
-**monline** is a beautiful, web-native molecular visualization tool powered by [xyzrender](https://github.com/aoterodelaroza/xyzrender) and Pyodide.
+**monline** is a beautiful, web-native molecular visualization tool powered by [xyzrender](https://github.com/aligfellow/xyzrender) and Pyodide.
 
 It allows you to instantly render `.xyz` files directly in your browser without any server-side dependencies. By running `xyzrender` in a WebAssembly Python environment, **monline** provides high-quality SVG vector outputs of molecular structures and periodic crystal lattices.
 
