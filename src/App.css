@@ -183,6 +183,23 @@ body {
   color: var(--text-main);
 }
 
+.select-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.select-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
 input[type=range] {
   -webkit-appearance: none;
   width: 100%;
@@ -233,6 +250,53 @@ input[type="color"]::-webkit-color-swatch-wrapper {
 input[type="color"]::-webkit-color-swatch {
   border: none;
   border-radius: 3px;
+}
+
+.cli-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-top: 1rem;
+}
+
+.cli-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.copy-btn {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  transition: background 0.2s;
+}
+
+.copy-btn:hover {
+  background: #e0e7ff; /* Light indigo */
+}
+
+.cli-code {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.75rem;
+  color: var(--text-main);
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
 }
 
 .button-group {

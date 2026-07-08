@@ -8,11 +8,16 @@ function App() {
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [filename, setFilename] = useState<string>("molecule.xyz");
   const [config, setConfig] = useState({
+    preset: "default",
     atom_scale: 1.0,
-    bond_width: 5.0,
+    bond_width: 5,
     background: "#ffffff",
     transparent: false,
     orient: true,
+    hide_bonds: false,
+    hy: false,
+    no_hy: false,
+    bo: false,
   });
 
   const workerRef = useRef<Worker | null>(null);
@@ -77,11 +82,15 @@ function App() {
     workerRef.current.postMessage({
       type: "RENDER",
       id,
-      data: {
-        fileContent,
-        filename,
-        config
-      }
+        data: {
+          fileContent,
+          filename,
+          config: {
+            ...config,
+            config: config.preset, // Map preset to python 'config' kwarg
+            preset: undefined      // Remove 'preset' so python doesn't get an invalid kwarg
+          },
+        },
     });
 
     try {
@@ -129,6 +138,25 @@ function App() {
     }
   };
 
+  const getCliCommand = () => {
+    let cmd = `xyzrender ${filename || "molecule.xyz"}`;
+    if (config.preset !== "default") cmd += ` --config ${config.preset}`;
+    if (config.atom_scale !== 1.0) cmd += ` --atom-scale ${config.atom_scale}`;
+    if (config.bond_width !== 5) cmd += ` --bond-width ${config.bond_width}`;
+    if (config.background !== "#ffffff") cmd += ` --background "${config.background}"`;
+    if (config.transparent) cmd += ` --transparent`;
+    if (config.orient) cmd += ` --orient`;
+    if (config.hide_bonds) cmd += ` --hide-bonds`;
+    if (config.hy) cmd += ` --hy`;
+    if (config.no_hy) cmd += ` --no-hy`;
+    if (config.bo) cmd += ` --bo`;
+    return cmd;
+  };
+
+  const copyCliCommand = () => {
+    navigator.clipboard.writeText(getCliCommand());
+  };
+
   return (
     <div className="app-container">
       <header className="header">
@@ -147,8 +175,33 @@ function App() {
           </div>
 
           <div className="control-group">
-            <h3>Render Settings</h3>
+            <h3>Styling</h3>
             
+            <label className="slider-label">
+              <span>Config Preset</span>
+              <select 
+                className="select-input"
+                value={config.preset}
+                onChange={(e) => setConfig({
+                  ...config, 
+                  preset: e.target.value,
+                  atom_scale: 1.0,
+                  bond_width: 5
+                })}
+              >
+                <option value="default">Default</option>
+                <option value="vdw">VdW</option>
+                <option value="flat">Flat</option>
+                <option value="paton">Paton</option>
+                <option value="skeletal">Skeletal</option>
+                <option value="bubble">Bubble</option>
+                <option value="tube">Tube</option>
+                <option value="mtube">M-Tube</option>
+                <option value="wire">Wire</option>
+                <option value="graph">Graph</option>
+              </select>
+            </label>
+
             <label className="slider-label">
               <span>Atom Scale ({config.atom_scale})</span>
               <input 
@@ -184,6 +237,10 @@ function App() {
               />
               <span>Transparent Background</span>
             </label>
+          </div>
+
+          <div className="control-group">
+            <h3>Display</h3>
 
             <label className="checkbox-label">
               <input 
@@ -193,6 +250,52 @@ function App() {
               />
               <span>Auto-orient</span>
             </label>
+
+            <label className="checkbox-label">
+              <input 
+                type="checkbox" 
+                checked={config.hide_bonds}
+                onChange={(e) => setConfig({...config, hide_bonds: e.target.checked})}
+              />
+              <span>Hide Bonds</span>
+            </label>
+
+            <label className="checkbox-label">
+              <input 
+                type="checkbox" 
+                checked={config.hy}
+                onChange={(e) => setConfig({...config, hy: e.target.checked})}
+              />
+              <span>Show All Hydrogens</span>
+            </label>
+
+            <label className="checkbox-label">
+              <input 
+                type="checkbox" 
+                checked={config.no_hy}
+                onChange={(e) => setConfig({...config, no_hy: e.target.checked})}
+              />
+              <span>Hide All Hydrogens</span>
+            </label>
+
+            <label className="checkbox-label">
+              <input 
+                type="checkbox" 
+                checked={config.bo}
+                onChange={(e) => setConfig({...config, bo: e.target.checked})}
+              />
+              <span>Show Bond Orders</span>
+            </label>
+          </div>
+
+          <div className="cli-section">
+            <div className="cli-header">
+              <span>CLI Equivalent</span>
+              <button className="copy-btn" onClick={copyCliCommand} title="Copy to clipboard">
+                Copy
+              </button>
+            </div>
+            <pre className="cli-code">{getCliCommand()}</pre>
           </div>
 
           <div className="button-group">
