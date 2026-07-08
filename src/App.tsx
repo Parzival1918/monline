@@ -190,7 +190,10 @@ function App() {
   return (
     <div className="app-container">
       <header className="header">
-        <h1>xyzrender web</h1>
+        <div className="title-container">
+          <h1>monline</h1>
+          <span className="subtitle">powered by xyzrender</span>
+        </div>
         <p className="status-badge">{status}</p>
       </header>
       
