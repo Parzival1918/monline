@@ -19,6 +19,9 @@ function App() {
     bo: false,
     fog: false,
     fog_strength: 1.0,
+    rotX: 0,
+    rotY: 0,
+    rotZ: 0,
   });
 
   const workerRef = useRef<Worker | null>(null);
@@ -109,6 +112,8 @@ function App() {
                wc.fog = true;
                if (wc.fog_strength === 1.0) delete wc.fog_strength;
             }
+            
+            // Note: rotX, rotY, rotZ are kept in wc so the worker can use them
             return wc;
           })(),
         },
@@ -200,6 +205,55 @@ function App() {
           </div>
 
           <div className="control-group">
+            <h3>Orientation</h3>
+            <label className="checkbox-label">
+              <input 
+                type="checkbox" 
+                checked={config.orient}
+                onChange={(e) => setConfig({...config, orient: e.target.checked})}
+              />
+              <span>Auto-Orient (PCA)</span>
+            </label>
+            
+            <label className="slider-label">
+              <span>Rotation X ({config.rotX}°)</span>
+              <input 
+                type="range" min="0" max="360" step="5" 
+                value={config.rotX}
+                onChange={(e) => setConfig({...config, rotX: parseInt(e.target.value)})}
+              />
+            </label>
+
+            <label className="slider-label">
+              <span>Rotation Y ({config.rotY}°)</span>
+              <input 
+                type="range" min="0" max="360" step="5" 
+                value={config.rotY}
+                onChange={(e) => setConfig({...config, rotY: parseInt(e.target.value)})}
+              />
+            </label>
+
+            <label className="slider-label">
+              <span>Rotation Z ({config.rotZ}°)</span>
+              <input 
+                type="range" min="0" max="360" step="5" 
+                value={config.rotZ}
+                onChange={(e) => setConfig({...config, rotZ: parseInt(e.target.value)})}
+              />
+            </label>
+            
+            {(config.rotX !== 0 || config.rotY !== 0 || config.rotZ !== 0) && (
+              <button 
+                className="reset-button"
+                onClick={() => setConfig({...config, rotX: 0, rotY: 0, rotZ: 0})}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '6px'}}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                Reset Rotation
+              </button>
+            )}
+          </div>
+
+          <div className="control-group">
             <h3>Styling</h3>
             
             <label className="slider-label">
@@ -267,13 +321,13 @@ function App() {
           <div className="control-group">
             <h3>Display</h3>
 
-            <label className="checkbox-label">
+            <label className="checkbox-label" style={{ display: 'none' }}>
               <input 
                 type="checkbox" 
                 checked={config.orient}
                 onChange={(e) => setConfig({...config, orient: e.target.checked})}
               />
-              <span>Auto-orient</span>
+              <span>Auto-Orient Image</span>
             </label>
 
             <label className="checkbox-label">

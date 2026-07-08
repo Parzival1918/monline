@@ -66,10 +66,51 @@ self.onmessage = async (event) => {
 
       const pythonCode = `
 import json
-from xyzrender.api import load, render
+import numpy as np
+from xyzrender.api import load, render, orient
 
 config_dict = json.loads(config_json)
 mol = load(filename)
+
+rotX = config_dict.pop('rotX', 0)
+rotY = config_dict.pop('rotY', 0)
+rotZ = config_dict.pop('rotZ', 0)
+
+if getattr(mol, 'cell_data', None) is not None:
+    # PCA on crystals aligns to atom cloud diagonals, which ruins lattice alignment.
+    # Force disable PCA for periodic systems.
+    config_dict['orient'] = False
+
+if rotX != 0 or rotY != 0 or rotZ != 0:
+    # Manual rotation overrides auto-orient
+    config_dict['orient'] = False
+
+    cx, sx = np.cos(np.deg2rad(rotX)), np.sin(np.deg2rad(rotX))
+    cy, sy = np.cos(np.deg2rad(rotY)), np.sin(np.deg2rad(rotY))
+    cz, sz = np.cos(np.deg2rad(rotZ)), np.sin(np.deg2rad(rotZ))
+
+    Rx = np.array([[1, 0, 0], [0, cx, -sx], [0, sx, cx]])
+    Ry = np.array([[cy, 0, sy], [0, 1, 0], [-sy, 0, cy]])
+    Rz = np.array([[cz, -sz, 0], [sz, cz, 0], [0, 0, 1]])
+
+    R = Rz @ Ry @ Rx
+    
+    nodes = list(mol.graph.nodes)
+    pos = np.array([mol.graph.nodes[n]['position'] for n in nodes])
+    center = pos.mean(axis=0)
+    
+    pos_rot = (pos - center) @ R.T + center
+    
+    for i, n in enumerate(nodes):
+        mol.graph.nodes[n]['position'] = tuple(pos_rot[i])
+        
+    if getattr(mol, 'cell_data', None) is not None:
+        mol.cell_data.lattice = mol.cell_data.lattice @ R.T
+        if mol.cell_data.cell_origin is not None:
+            mol.cell_data.cell_origin = (mol.cell_data.cell_origin - center) @ R.T + center
+            
+    mol.oriented = True
+
 svg_string = str(render(mol, **config_dict))
 svg_string
 `;
