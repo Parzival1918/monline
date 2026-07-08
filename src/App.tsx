@@ -15,9 +15,10 @@ function App() {
     transparent: false,
     orient: true,
     hide_bonds: false,
-    hy: false,
-    no_hy: false,
+    hydrogen_display: "default",
     bo: false,
+    fog: false,
+    fog_strength: 1.0,
   });
 
   const workerRef = useRef<Worker | null>(null);
@@ -88,15 +89,26 @@ function App() {
           config: (() => {
             const wc: any = { ...config, config: config.preset };
             delete wc.preset;
+            delete wc.hydrogen_display;
+            
+            if (config.hydrogen_display === "show") wc.hy = true;
+            if (config.hydrogen_display === "hide") wc.no_hy = true;
+            
             if (wc.atom_scale === 1.0) delete wc.atom_scale;
             if (wc.bond_width === 5) delete wc.bond_width;
             if (wc.background === "#ffffff") delete wc.background;
             if (wc.orient === true) delete wc.orient;
             if (wc.transparent === false) delete wc.transparent;
             if (wc.hide_bonds === false) delete wc.hide_bonds;
-            if (wc.hy === false) delete wc.hy;
-            if (wc.no_hy === false) delete wc.no_hy;
             if (wc.bo === false) delete wc.bo;
+            
+            if (wc.fog === false) {
+               delete wc.fog;
+               delete wc.fog_strength;
+            } else {
+               wc.fog = true;
+               if (wc.fog_strength === 1.0) delete wc.fog_strength;
+            }
             return wc;
           })(),
         },
@@ -156,9 +168,13 @@ function App() {
     if (config.transparent) cmd += ` --transparent`;
     if (config.orient) cmd += ` --orient`;
     if (config.hide_bonds) cmd += ` --hide-bonds`;
-    if (config.hy) cmd += ` --hy`;
-    if (config.no_hy) cmd += ` --no-hy`;
+    if (config.hydrogen_display === "show") cmd += ` --hy`;
+    if (config.hydrogen_display === "hide") cmd += ` --no-hy`;
     if (config.bo) cmd += ` --bo`;
+    if (config.fog) {
+      cmd += ` --fog`;
+      if (config.fog_strength !== 1.0) cmd += ` --fog-strength ${config.fog_strength}`;
+    }
     return cmd;
   };
 
@@ -269,22 +285,17 @@ function App() {
               <span>Hide Bonds</span>
             </label>
 
-            <label className="checkbox-label">
-              <input 
-                type="checkbox" 
-                checked={config.hy}
-                onChange={(e) => setConfig({...config, hy: e.target.checked})}
-              />
-              <span>Show All Hydrogens</span>
-            </label>
-
-            <label className="checkbox-label">
-              <input 
-                type="checkbox" 
-                checked={config.no_hy}
-                onChange={(e) => setConfig({...config, no_hy: e.target.checked})}
-              />
-              <span>Hide All Hydrogens</span>
+            <label className="slider-label">
+              <span>Hydrogens</span>
+              <select 
+                className="select-input"
+                value={config.hydrogen_display}
+                onChange={(e) => setConfig({...config, hydrogen_display: e.target.value})}
+              >
+                <option value="default">Default</option>
+                <option value="show">Show All</option>
+                <option value="hide">Hide All</option>
+              </select>
             </label>
 
             <label className="checkbox-label">
@@ -295,6 +306,26 @@ function App() {
               />
               <span>Show Bond Orders</span>
             </label>
+
+            <label className="checkbox-label">
+              <input 
+                type="checkbox" 
+                checked={config.fog}
+                onChange={(e) => setConfig({...config, fog: e.target.checked})}
+              />
+              <span>Depth Fog</span>
+            </label>
+
+            {config.fog && (
+              <label className="slider-label">
+                <span>Fog Strength ({config.fog_strength})</span>
+                <input 
+                  type="range" min="0.1" max="5.0" step="0.1" 
+                  value={config.fog_strength}
+                  onChange={(e) => setConfig({...config, fog_strength: parseFloat(e.target.value)})}
+                />
+              </label>
+            )}
           </div>
 
           <div className="cli-section">
@@ -331,7 +362,7 @@ function App() {
           </div>
           <textarea 
             className="code-editor"
-            value={fileContent}
+            value={fileContent || ""}
             onChange={(e) => setFileContent(e.target.value)}
             disabled={!fileContent && !filename}
             placeholder="Upload a file or paste molecule data here..."
