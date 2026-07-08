@@ -1,32 +1,25 @@
-# React + TypeScript + Vite
+# monline
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+**monline** is a beautiful, web-native molecular visualization tool powered by [xyzrender](https://github.com/aoterodelaroza/xyzrender) and Pyodide.
 
-Currently, two official plugins are available:
+It allows you to instantly render `.xyz` files directly in your browser without any server-side dependencies. By running `xyzrender` in a WebAssembly Python environment, **monline** provides high-quality SVG vector outputs of molecular structures and periodic crystal lattices.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- **Browser-Native Rendering:** Uses Pyodide to run `xyzrender` entirely in the client. No data leaves your browser.
+- **Dynamic Styling Controls:** Adjust atom scaling, bond widths, and styling parameters on the fly.
+- **Manual 3D Orientation:** Interactive X, Y, and Z rotation sliders to precisely control the camera angle, with full support for periodic bounding boxes.
+- **Depth Fog:** Add realistic depth to large molecules using dynamic fog shading.
+- **Copy CLI Command:** Automatically generates the exact `xyzrender` command line arguments needed to reproduce your current render in the terminal.
+- **SVG Download:** Export your pristine vector renders to SVG with one click.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Getting Started
 
-## Expanding the Oxlint configuration
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Run the development server: `npm run dev`
+4. Drag and drop a `.xyz` file into the editor, or write one manually!
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## License
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
-
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+This project is licensed under the **GNU General Public License v3.0**. See the [LICENSE](LICENSE) file for more details.
