@@ -85,11 +85,20 @@ function App() {
         data: {
           fileContent,
           filename,
-          config: {
-            ...config,
-            config: config.preset, // Map preset to python 'config' kwarg
-            preset: undefined      // Remove 'preset' so python doesn't get an invalid kwarg
-          },
+          config: (() => {
+            const wc: any = { ...config, config: config.preset };
+            delete wc.preset;
+            if (wc.atom_scale === 1.0) delete wc.atom_scale;
+            if (wc.bond_width === 5) delete wc.bond_width;
+            if (wc.background === "#ffffff") delete wc.background;
+            if (wc.orient === true) delete wc.orient;
+            if (wc.transparent === false) delete wc.transparent;
+            if (wc.hide_bonds === false) delete wc.hide_bonds;
+            if (wc.hy === false) delete wc.hy;
+            if (wc.no_hy === false) delete wc.no_hy;
+            if (wc.bo === false) delete wc.bo;
+            return wc;
+          })(),
         },
     });
 
