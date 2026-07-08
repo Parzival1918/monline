@@ -30,9 +30,9 @@ sys.modules['rdkit.Chem'] = MagicMock()
   self.postMessage({ type: "status", text: "Installing xyzrender..." });
   try {
     // Install the dummy rdkit to satisfy xyzgraph dependency
-    await micropip.install(location.origin + "/rdkit-999.9.9-py3-none-any.whl");
+    await micropip.install(new URL("rdkit-999.9.9-py3-none-any.whl", self.location.href).href);
     // Force absolute path and fix wheel name with cache busting
-    await micropip.install(location.origin + "/xyzrender-0.3.1-py3-none-any.whl?v=2");
+    await micropip.install(new URL("xyzrender-0.3.1-py3-none-any.whl?v=2", self.location.href).href);
   } catch (e) {
     self.postMessage({ type: "ERROR", id: -1, error: "Install failed: " + e.toString() });
     throw e;

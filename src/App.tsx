@@ -30,8 +30,8 @@ function App() {
   const rejectsRef = useRef<Record<number, (err: any) => void>>({});
 
   useEffect(() => {
-    // Initialize Web Worker
-    workerRef.current = new Worker('/pyodide-worker.js');
+    // Initialize Web Worker using Vite's BASE_URL
+    workerRef.current = new Worker(import.meta.env.BASE_URL + 'pyodide-worker.js');
 
     workerRef.current.onmessage = (event) => {
       const { type, text, id, svg, error } = event.data;
