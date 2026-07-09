@@ -75,15 +75,21 @@ mol = load(filename)
 rotX = config_dict.pop('rotX', 0)
 rotY = config_dict.pop('rotY', 0)
 rotZ = config_dict.pop('rotZ', 0)
+rotMatrix = config_dict.pop('rotMatrix', None)
 
 if getattr(mol, 'cell_data', None) is not None:
     # PCA on crystals aligns to atom cloud diagonals, which ruins lattice alignment.
     # Force disable PCA for periodic systems.
     config_dict['orient'] = False
 
-if rotX != 0 or rotY != 0 or rotZ != 0:
+if rotMatrix is not None or rotX != 0 or rotY != 0 or rotZ != 0:
     # Manual rotation overrides auto-orient
     config_dict['orient'] = False
+
+    if rotMatrix is not None:
+        R_base = np.array(rotMatrix).reshape(3, 3)
+    else:
+        R_base = np.eye(3)
 
     cx, sx = np.cos(np.deg2rad(rotX)), np.sin(np.deg2rad(rotX))
     cy, sy = np.cos(np.deg2rad(rotY)), np.sin(np.deg2rad(rotY))
@@ -93,7 +99,8 @@ if rotX != 0 or rotY != 0 or rotZ != 0:
     Ry = np.array([[cy, 0, sy], [0, 1, 0], [-sy, 0, cy]])
     Rz = np.array([[cz, -sz, 0], [sz, cz, 0], [0, 0, 1]])
 
-    R = Rz @ Ry @ Rx
+    R_sliders = Rz @ Ry @ Rx
+    R = R_sliders @ R_base
     
     nodes = list(mol.graph.nodes)
     pos = np.array([mol.graph.nodes[n]['position'] for n in nodes])

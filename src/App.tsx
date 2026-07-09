@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import './App.css';
+import MolstarViewer from './MolstarViewer';
 
 function App() {
   const [status, setStatus] = useState("Initializing Pyodide...");
@@ -7,13 +8,14 @@ function App() {
   const [isRendering, setIsRendering] = useState(false);
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [filename, setFilename] = useState<string>("molecule.xyz");
+  const [viewMode, setViewMode] = useState<'molstar' | 'svg'>('molstar');
   const [config, setConfig] = useState({
     preset: "default",
     atom_scale: 1.0,
     bond_width: 5,
     background: "#ffffff",
     transparent: true,
-    orient: true,
+    orientationMode: "auto",
     hide_bonds: false,
     hydrogen_display: "default",
     bo: false,
@@ -28,6 +30,7 @@ function App() {
   const messageIdRef = useRef(0);
   const resolvesRef = useRef<Record<number, (val: any) => void>>({});
   const rejectsRef = useRef<Record<number, (err: any) => void>>({});
+  const rotMatrixRef = useRef<number[] | null>(null);
 
   useEffect(() => {
     // Initialize Web Worker using Vite's BASE_URL
@@ -100,7 +103,6 @@ function App() {
             if (wc.atom_scale === 1.0) delete wc.atom_scale;
             if (wc.bond_width === 5) delete wc.bond_width;
             if (wc.background === "#ffffff") delete wc.background;
-            if (wc.orient === true) delete wc.orient;
             if (wc.transparent === false) delete wc.transparent;
             if (wc.hide_bonds === false) delete wc.hide_bonds;
             if (wc.bo === false) delete wc.bo;
@@ -113,6 +115,20 @@ function App() {
                if (wc.fog_strength === 1.0) delete wc.fog_strength;
             }
             
+            delete wc.orientationMode;
+            if (config.orientationMode === 'auto') {
+              wc.orient = true;
+              delete wc.rotX; delete wc.rotY; delete wc.rotZ;
+            } else if (config.orientationMode === 'sliders') {
+              wc.orient = false;
+            } else if (config.orientationMode === 'molstar') {
+              wc.orient = false;
+              delete wc.rotX; delete wc.rotY; delete wc.rotZ;
+              if (rotMatrixRef.current) {
+                wc.rotMatrix = rotMatrixRef.current;
+              }
+            }
+            
             // Note: rotX, rotY, rotZ are kept in wc so the worker can use them
             return wc;
           })(),
@@ -122,6 +138,7 @@ function App() {
     try {
       const svg = await promise;
       setSvgOutput(svg);
+      setViewMode('svg');
       setStatus("Render complete!");
     } catch (err) {
       console.error(err);
@@ -171,7 +188,12 @@ function App() {
     if (config.bond_width !== 5) cmd += ` --bond-width ${config.bond_width}`;
     if (!config.transparent && config.background !== "#ffffff") cmd += ` --background "${config.background}"`;
     if (config.transparent) cmd += ` --transparent`;
-    if (config.orient) cmd += ` --orient`;
+    if (config.orientationMode === 'auto') cmd += ` --orient`;
+    if (config.orientationMode === 'sliders') {
+      if (config.rotX !== 0) cmd += ` --rotX ${config.rotX}`;
+      if (config.rotY !== 0) cmd += ` --rotY ${config.rotY}`;
+      if (config.rotZ !== 0) cmd += ` --rotZ ${config.rotZ}`;
+    }
     if (config.hide_bonds) cmd += ` --hide-bonds`;
     if (config.hydrogen_display === "show") cmd += ` --hy`;
     if (config.hydrogen_display === "hide") cmd += ` --no-hy`;
@@ -209,50 +231,63 @@ function App() {
 
           <div className="control-group">
             <h3>Orientation</h3>
-            <label className="checkbox-label">
-              <input 
-                type="checkbox" 
-                checked={config.orient}
-                onChange={(e) => setConfig({...config, orient: e.target.checked})}
-              />
-              <span>Auto-Orient (PCA)</span>
-            </label>
-            
             <label className="slider-label">
-              <span>Rotation X ({config.rotX}°)</span>
-              <input 
-                type="range" min="0" max="360" step="5" 
-                value={config.rotX}
-                onChange={(e) => setConfig({...config, rotX: parseInt(e.target.value)})}
-              />
-            </label>
-
-            <label className="slider-label">
-              <span>Rotation Y ({config.rotY}°)</span>
-              <input 
-                type="range" min="0" max="360" step="5" 
-                value={config.rotY}
-                onChange={(e) => setConfig({...config, rotY: parseInt(e.target.value)})}
-              />
-            </label>
-
-            <label className="slider-label">
-              <span>Rotation Z ({config.rotZ}°)</span>
-              <input 
-                type="range" min="0" max="360" step="5" 
-                value={config.rotZ}
-                onChange={(e) => setConfig({...config, rotZ: parseInt(e.target.value)})}
-              />
-            </label>
-            
-            {(config.rotX !== 0 || config.rotY !== 0 || config.rotZ !== 0) && (
-              <button 
-                className="reset-button"
-                onClick={() => setConfig({...config, rotX: 0, rotY: 0, rotZ: 0})}
+              <span>Mode</span>
+              <select 
+                className="select-input"
+                value={config.orientationMode}
+                onChange={(e) => {
+                  setConfig({...config, orientationMode: e.target.value});
+                  if (e.target.value === 'molstar') {
+                    setViewMode('molstar');
+                  }
+                }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '6px'}}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                Reset Rotation
-              </button>
+                <option value="auto">Auto Orient (PCA)</option>
+                <option value="sliders">Manual Sliders</option>
+                <option value="molstar">Molstar Viewer</option>
+              </select>
+            </label>
+            
+            {config.orientationMode === 'sliders' && (
+              <>
+                <label className="slider-label">
+                  <span>Rotation X ({config.rotX}°)</span>
+                  <input 
+                    type="range" min="0" max="360" step="5" 
+                    value={config.rotX}
+                    onChange={(e) => setConfig({...config, rotX: parseInt(e.target.value)})}
+                  />
+                </label>
+
+                <label className="slider-label">
+                  <span>Rotation Y ({config.rotY}°)</span>
+                  <input 
+                    type="range" min="0" max="360" step="5" 
+                    value={config.rotY}
+                    onChange={(e) => setConfig({...config, rotY: parseInt(e.target.value)})}
+                  />
+                </label>
+
+                <label className="slider-label">
+                  <span>Rotation Z ({config.rotZ}°)</span>
+                  <input 
+                    type="range" min="0" max="360" step="5" 
+                    value={config.rotZ}
+                    onChange={(e) => setConfig({...config, rotZ: parseInt(e.target.value)})}
+                  />
+                </label>
+                
+                {(config.rotX !== 0 || config.rotY !== 0 || config.rotZ !== 0) && (
+                  <button 
+                    className="reset-button"
+                    onClick={() => setConfig({...config, rotX: 0, rotY: 0, rotZ: 0})}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '6px'}}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    Reset Rotation
+                  </button>
+                )}
+              </>
             )}
           </div>
 
@@ -323,15 +358,6 @@ function App() {
 
           <div className="control-group">
             <h3>Display</h3>
-
-            <label className="checkbox-label" style={{ display: 'none' }}>
-              <input 
-                type="checkbox" 
-                checked={config.orient}
-                onChange={(e) => setConfig({...config, orient: e.target.checked})}
-              />
-              <span>Auto-Orient Image</span>
-            </label>
 
             <label className="checkbox-label">
               <input 
@@ -427,13 +453,65 @@ function App() {
         </section>
 
         <section className="preview-area">
-          {svgOutput ? (
-            <div className="svg-container" dangerouslySetInnerHTML={{ __html: svgOutput }} />
-          ) : (
-            <div className="placeholder">
-              <p>Upload or paste a molecule and click Render</p>
+          <div className="preview-header">
+            <button 
+              className={`view-toggle ${viewMode === 'molstar' ? 'active' : ''}`}
+              onClick={() => setViewMode('molstar')}
+            >
+              Interactive View
+            </button>
+            <button 
+              className={`view-toggle ${viewMode === 'svg' ? 'active' : ''}`}
+              onClick={() => {
+                if (viewMode !== 'svg') {
+                  if (config.orientationMode === 'molstar') {
+                    handleRender();
+                  } else {
+                    setViewMode('svg');
+                  }
+                }
+              }}
+            >
+              Rendered SVG
+            </button>
+          </div>
+          <div className="preview-content" style={{ position: 'relative' }}>
+            <div style={{ 
+              visibility: viewMode === 'molstar' ? 'visible' : 'hidden', 
+              opacity: viewMode === 'molstar' ? 1 : 0,
+              position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+              transition: 'opacity 0.2s',
+              zIndex: viewMode === 'molstar' ? 2 : 1
+            }}>
+              {fileContent ? (
+                <MolstarViewer 
+                  fileContent={fileContent} 
+                  filename={filename} 
+                  onRotationChange={(matrix) => { rotMatrixRef.current = matrix; }} 
+                />
+              ) : (
+                <div className="placeholder">
+                  <p>Upload or paste a molecule to align interactively</p>
+                </div>
+              )}
             </div>
-          )}
+            <div style={{ 
+              visibility: viewMode === 'svg' ? 'visible' : 'hidden', 
+              opacity: viewMode === 'svg' ? 1 : 0,
+              position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+              transition: 'opacity 0.2s',
+              zIndex: viewMode === 'svg' ? 2 : 1,
+              backgroundColor: config.transparent ? 'transparent' : config.background
+            }}>
+              {svgOutput ? (
+                <div className="svg-container" dangerouslySetInnerHTML={{ __html: svgOutput }} />
+              ) : (
+                <div className="placeholder">
+                  <p>Upload or paste a molecule and click Render</p>
+                </div>
+              )}
+            </div>
+          </div>
         </section>
       </main>
     </div>

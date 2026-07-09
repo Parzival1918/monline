@@ -376,10 +376,49 @@ input[type="color"]::-webkit-color-swatch {
 .preview-area {
   flex: 1;
   display: flex;
+  flex-direction: column;
+  padding: 1rem 2rem 2rem 2rem;
+  background-color: var(--bg-main);
+}
+
+.preview-header {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  justify-content: center;
+}
+
+.view-toggle {
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+
+.view-toggle.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.view-toggle:hover:not(.active) {
+  background: #f1f5f9;
+}
+
+.preview-content {
+  flex: 1;
+  display: flex;
   justify-content: center;
   align-items: center;
-  padding: 2rem;
-  background-color: var(--bg-main);
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  position: relative;
 }
 
 .svg-container {
