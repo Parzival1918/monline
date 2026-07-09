@@ -80,8 +80,8 @@ const MolstarViewer: React.FC<MolstarViewerProps> = ({ fileContent, filename, on
       pluginRef.current = plugin;
       setPluginReady(true);
 
-      // Listen to camera changes
-      plugin.canvas3d?.camera.stateChanged.subscribe(() => {
+      // Listen to all draw events to guarantee we capture trackball drags
+      plugin.canvas3d?.didDraw.subscribe(() => {
         captureCameraState(plugin, onRotationChange);
       });
       // captureRotation is now local to initMolstar. We need to expose it or call it elsewhere if we wanted to.
