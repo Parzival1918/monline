@@ -434,6 +434,9 @@ input[type="color"]::-webkit-color-swatch {
   max-height: 100%;
   width: auto;
   height: auto;
+}
+
+.svg-container.transparent-bg svg {
   filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.1));
 }
 

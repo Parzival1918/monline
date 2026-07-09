@@ -130,6 +130,11 @@ function App() {
             }
             
             // Note: rotX, rotY, rotZ are kept in wc so the worker can use them
+            
+            // Force transparent for the UI renderer so the CSS background can handle color changes instantly
+            wc.transparent = true;
+            delete wc.background; // We handle background in CSS and download
+
             return wc;
           })(),
         },
@@ -151,6 +156,14 @@ function App() {
   const handleDownload = async () => {
     if (!svgOutput) return;
 
+    let finalSvg = svgOutput;
+    // Inject background rect for download if transparent is disabled
+    if (!config.transparent) {
+      const rect = `<rect width="100%" height="100%" fill="${config.background}" />`;
+      // Find the end of the <svg ...> tag and insert the rect right after it
+      finalSvg = finalSvg.replace(/(<svg[^>]*>)/i, `$1\n  ${rect}`);
+    }
+
     try {
       if ('showSaveFilePicker' in window) {
         const defaultName = (filename ? filename.replace(/\.[^/.]+$/, "") : "molecule") + ".svg";
@@ -162,11 +175,11 @@ function App() {
           }],
         });
         const writable = await handle.createWritable();
-        await writable.write(svgOutput);
+        await writable.write(finalSvg);
         await writable.close();
       } else {
         // Fallback for browsers that don't support the File System Access API
-        const blob = new Blob([svgOutput], { type: 'image/svg+xml' });
+        const blob = new Blob([finalSvg], { type: 'image/svg+xml' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
