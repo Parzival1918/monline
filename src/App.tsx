@@ -57,8 +57,8 @@ function App() {
   const rotMatrixRef = useRef<number[] | null>(null);
 
   useEffect(() => {
-    // Initialize Web Worker using Vite's BASE_URL
-    workerRef.current = new Worker(import.meta.env.BASE_URL + 'pyodide-worker.js');
+    // Initialize Web Worker using Vite's BASE_URL with cache busting
+    workerRef.current = new Worker(import.meta.env.BASE_URL + 'pyodide-worker.js?v=3');
 
     workerRef.current.onmessage = (event) => {
       const { type, text, id, svg, error } = event.data;
