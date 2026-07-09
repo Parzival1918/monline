@@ -4,6 +4,7 @@ import { createPluginUI } from 'molstar/lib/mol-plugin-ui';
 import { DefaultPluginUISpec } from 'molstar/lib/mol-plugin-ui/spec';
 import { PluginUIContext } from 'molstar/lib/mol-plugin-ui/context';
 import { StateTransforms } from 'molstar/lib/mol-plugin-state/transforms';
+import { PluginConfig } from 'molstar/lib/mol-plugin/config';
 import 'molstar/lib/mol-plugin-ui/skin/light.scss';
 
 interface MolstarViewerProps {
@@ -65,6 +66,10 @@ const MolstarViewer: React.FC<MolstarViewerProps> = ({ fileContent, filename, sh
         },
         spec: {
           ...DefaultPluginUISpec(),
+          config: [
+            [PluginConfig.Viewport.ShowExpand, false],
+            [PluginConfig.Viewport.ShowToggleFullscreen, false]
+          ],
           layout: {
             initial: {
               isExpanded: false,
@@ -78,6 +83,8 @@ const MolstarViewer: React.FC<MolstarViewerProps> = ({ fileContent, filename, sh
         plugin.dispose();
         return;
       }
+
+      plugin.canvas3d?.setProps({ camera: { mode: 'orthographic' } });
 
       pluginRef.current = plugin;
       setPluginReady(true);
