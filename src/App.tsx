@@ -12,7 +12,7 @@ function App() {
     atom_scale: 1.0,
     bond_width: 5,
     background: "#ffffff",
-    transparent: false,
+    transparent: true,
     orient: true,
     hide_bonds: false,
     hydrogen_display: "default",
@@ -169,7 +169,7 @@ function App() {
     if (config.preset !== "default") cmd += ` --config ${config.preset}`;
     if (config.atom_scale !== 1.0) cmd += ` --atom-scale ${config.atom_scale}`;
     if (config.bond_width !== 5) cmd += ` --bond-width ${config.bond_width}`;
-    if (config.background !== "#ffffff") cmd += ` --background "${config.background}"`;
+    if (!config.transparent && config.background !== "#ffffff") cmd += ` --background "${config.background}"`;
     if (config.transparent) cmd += ` --transparent`;
     if (config.orient) cmd += ` --orient`;
     if (config.hide_bonds) cmd += ` --hide-bonds`;
