@@ -1,44 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="512" height="512">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#1e1e2e" />
-      <stop offset="100%" stop-color="#11111b" />
-    </linearGradient>
-    <linearGradient id="bond" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#89b4fa" stop-opacity="0.8" />
-      <stop offset="100%" stop-color="#cba6f7" stop-opacity="0.8" />
-    </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="2" result="blur" />
-      <feMerge>
-        <feMergeNode in="blur" />
-        <feMergeNode in="SourceGraphic" />
-      </feMerge>
-    </filter>
-  </defs>
-  
-  <rect width="100" height="100" rx="20" fill="url(#bg)" />
-  
-  <g stroke="url(#bond)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
-    <line x1="25" y1="75" x2="25" y2="35" />
-    <line x1="25" y1="35" x2="50" y2="60" />
-    <line x1="50" y1="60" x2="75" y2="35" />
-    <line x1="75" y1="35" x2="75" y2="75" />
-    
-    <line x1="25" y1="35" x2="15" y2="20" />
-    <line x1="75" y1="35" x2="85" y2="20" />
-    <line x1="50" y1="60" x2="50" y2="85" />
-  </g>
-  
-  <g filter="url(#glow)">
-    <circle cx="25" cy="75" r="5" fill="#f38ba8" />
-    <circle cx="25" cy="35" r="6" fill="#89b4fa" />
-    <circle cx="50" cy="60" r="6" fill="#cba6f7" />
-    <circle cx="75" cy="35" r="6" fill="#89b4fa" />
-    <circle cx="75" cy="75" r="5" fill="#f38ba8" />
-    
-    <circle cx="15" cy="20" r="4" fill="#a6e3a1" />
-    <circle cx="85" cy="20" r="4" fill="#a6e3a1" />
-    <circle cx="50" cy="85" r="4" fill="#f9e2af" />
-  </g>
+<svg width="46" height="35" viewBox="0 0 130 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M20 80 L20 30 L45 60 L70 30 L70 80" stroke="#3b82f6" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="20" cy="80" r="6" fill="#ffffff" stroke="#3b82f6" stroke-width="4"/>
+  <circle cx="20" cy="30" r="6" fill="#ffffff" stroke="#3b82f6" stroke-width="4"/>
+  <circle cx="45" cy="60" r="6" fill="#ffffff" stroke="#3b82f6" stroke-width="4"/>
+  <circle cx="70" cy="30" r="6" fill="#ffffff" stroke="#3b82f6" stroke-width="4"/>
+  <circle cx="70" cy="80" r="6" fill="#ffffff" stroke="#3b82f6" stroke-width="4"/>
+  <polygon points="100,45 116,54 116,71 100,81 84,71 84,54" stroke="#3b82f6" stroke-width="6" stroke-linejoin="round"/>
+  <line x1="90" y1="57" x2="90" y2="68" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
+  <line x1="100" y1="74" x2="110" y2="68" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
+  <line x1="110" y1="57" x2="100" y2="52" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="100" cy="45" r="4" fill="#ffffff" stroke="#3b82f6" stroke-width="3"/>
+  <circle cx="116" cy="54" r="4" fill="#ffffff" stroke="#3b82f6" stroke-width="3"/>
+  <circle cx="116" cy="71" r="4" fill="#ffffff" stroke="#3b82f6" stroke-width="3"/>
+  <circle cx="100" cy="81" r="4" fill="#ffffff" stroke="#3b82f6" stroke-width="3"/>
+  <circle cx="84" cy="71" r="4" fill="#ffffff" stroke="#3b82f6" stroke-width="3"/>
+  <circle cx="84" cy="54" r="4" fill="#ffffff" stroke="#3b82f6" stroke-width="3"/>
 </svg>

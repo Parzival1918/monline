@@ -1,6 +1,28 @@
 import { useState, useEffect, useRef } from 'react';
 import './App.css';
 import MolstarViewer from './MolstarViewer';
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+
+const Logo = () => (
+  <svg width="46" height="35" viewBox="0 0 130 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20 80 L20 30 L45 60 L70 30 L70 80" stroke="var(--primary-color)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="20" cy="80" r="6" fill="var(--panel-bg)" stroke="var(--primary-color)" strokeWidth="4" />
+    <circle cx="20" cy="30" r="6" fill="var(--panel-bg)" stroke="var(--primary-color)" strokeWidth="4" />
+    <circle cx="45" cy="60" r="6" fill="var(--panel-bg)" stroke="var(--primary-color)" strokeWidth="4" />
+    <circle cx="70" cy="30" r="6" fill="var(--panel-bg)" stroke="var(--primary-color)" strokeWidth="4" />
+    <circle cx="70" cy="80" r="6" fill="var(--panel-bg)" stroke="var(--primary-color)" strokeWidth="4" />
+    <polygon points="100,45 116,54 116,71 100,81 84,71 84,54" stroke="var(--primary-color)" strokeWidth="6" strokeLinejoin="round" />
+    <line x1="90" y1="57" x2="90" y2="68" stroke="var(--primary-color)" strokeWidth="3" strokeLinecap="round" />
+    <line x1="100" y1="74" x2="110" y2="68" stroke="var(--primary-color)" strokeWidth="3" strokeLinecap="round" />
+    <line x1="110" y1="57" x2="100" y2="52" stroke="var(--primary-color)" strokeWidth="3" strokeLinecap="round" />
+    <circle cx="100" cy="45" r="4" fill="var(--panel-bg)" stroke="var(--primary-color)" strokeWidth="3" />
+    <circle cx="116" cy="54" r="4" fill="var(--panel-bg)" stroke="var(--primary-color)" strokeWidth="3" />
+    <circle cx="116" cy="71" r="4" fill="var(--panel-bg)" stroke="var(--primary-color)" strokeWidth="3" />
+    <circle cx="100" cy="81" r="4" fill="var(--panel-bg)" stroke="var(--primary-color)" strokeWidth="3" />
+    <circle cx="84" cy="71" r="4" fill="var(--panel-bg)" stroke="var(--primary-color)" strokeWidth="3" />
+    <circle cx="84" cy="54" r="4" fill="var(--panel-bg)" stroke="var(--primary-color)" strokeWidth="3" />
+  </svg>
+);
 
 function App() {
   const [status, setStatus] = useState("Initializing Pyodide...");
@@ -233,9 +255,8 @@ function App() {
   return (
     <div className="app-container">
       <header className="header">
-        <div className="title-container">
-          <h1>monline</h1>
-          <span className="subtitle">powered by xyzrender</span>
+        <div className="title-container" style={{ alignItems: 'center', gap: '2px' }}>
+          <Logo />
         </div>
         <p className="status-badge">{status}</p>
       </header>
@@ -562,7 +583,11 @@ function App() {
               backgroundColor: config.transparent ? 'transparent' : config.background
             }}>
               {svgOutput ? (
-                <div className="svg-container" dangerouslySetInnerHTML={{ __html: svgOutput }} />
+                <TransformWrapper centerOnInit={true} minScale={0.1} maxScale={10} initialScale={1}>
+                  <TransformComponent wrapperStyle={{ width: "100%", height: "100%" }}>
+                    <div className="svg-container" dangerouslySetInnerHTML={{ __html: svgOutput }} />
+                  </TransformComponent>
+                </TransformWrapper>
               ) : (
                 <div className="placeholder">
                   <p>Upload or paste a molecule and click Render</p>
