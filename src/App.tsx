@@ -96,56 +96,56 @@ function App() {
     workerRef.current.postMessage({
       type: "RENDER",
       id,
-        data: {
-          fileContent,
-          filename: actualFilename,
-          config: (() => {
-            const wc: any = { ...config, config: config.preset };
-            delete wc.preset;
-            delete wc.hydrogen_display;
-            
-            if (config.hydrogen_display === "show") wc.hy = true;
-            if (config.hydrogen_display === "hide") wc.no_hy = true;
-            
-            if (wc.atom_scale === 1.0) delete wc.atom_scale;
-            if (wc.bond_width === 5) delete wc.bond_width;
-            if (wc.background === "#ffffff") delete wc.background;
-            if (wc.transparent === false) delete wc.transparent;
-            if (wc.hide_bonds === false) delete wc.hide_bonds;
-            if (wc.bo === false) delete wc.bo;
-            
-            if (wc.fog === false) {
-               delete wc.fog;
-               delete wc.fog_strength;
-            } else {
-               wc.fog = true;
-               if (wc.fog_strength === 1.0) delete wc.fog_strength;
-            }
-            
-            delete wc.orientationMode;
-            if (config.orientationMode === 'auto') {
-              wc.orient = true;
-              delete wc.rotX; delete wc.rotY; delete wc.rotZ;
-            } else if (config.orientationMode === 'sliders') {
-              wc.orient = false;
-            } else if (config.orientationMode === 'molstar') {
-              wc.orient = false;
-              delete wc.rotX; delete wc.rotY; delete wc.rotZ;
-              if (rotMatrixRef.current) {
-                wc.rotMatrix = rotMatrixRef.current;
-              }
-            }
-            
-            // Note: rotX, rotY, rotZ are kept in wc so the worker can use them
-            
-            // Force transparent for the UI renderer so the CSS background can handle color changes instantly
-            wc.transparent = true;
-            delete wc.background; // We handle background in CSS and download
-            delete wc.show_unit_cell; // Only used for Molstar UI
+      data: {
+        fileContent,
+        filename: actualFilename,
+        config: (() => {
+          const wc: any = { ...config, config: config.preset };
+          delete wc.preset;
+          delete wc.hydrogen_display;
 
-            return wc;
-          })(),
-        },
+          if (config.hydrogen_display === "show") wc.hy = true;
+          if (config.hydrogen_display === "hide") wc.no_hy = true;
+
+          if (wc.atom_scale === 1.0) delete wc.atom_scale;
+          if (wc.bond_width === 5) delete wc.bond_width;
+          if (wc.background === "#ffffff") delete wc.background;
+          if (wc.transparent === false) delete wc.transparent;
+          if (wc.hide_bonds === false) delete wc.hide_bonds;
+          if (wc.bo === false) delete wc.bo;
+
+          if (wc.fog === false) {
+            delete wc.fog;
+            delete wc.fog_strength;
+          } else {
+            wc.fog = true;
+            if (wc.fog_strength === 1.0) delete wc.fog_strength;
+          }
+
+          delete wc.orientationMode;
+          if (config.orientationMode === 'auto') {
+            wc.orient = true;
+            delete wc.rotX; delete wc.rotY; delete wc.rotZ;
+          } else if (config.orientationMode === 'sliders') {
+            wc.orient = false;
+          } else if (config.orientationMode === 'molstar') {
+            wc.orient = false;
+            delete wc.rotX; delete wc.rotY; delete wc.rotZ;
+            if (rotMatrixRef.current) {
+              wc.rotMatrix = rotMatrixRef.current;
+            }
+          }
+
+          // Note: rotX, rotY, rotZ are kept in wc so the worker can use them
+
+          // Force transparent for the UI renderer so the CSS background can handle color changes instantly
+          wc.transparent = true;
+          delete wc.background; // We handle background in CSS and download
+          delete wc.show_unit_cell; // Only used for Molstar UI
+
+          return wc;
+        })(),
+      },
     });
 
     try {
@@ -239,7 +239,7 @@ function App() {
         </div>
         <p className="status-badge">{status}</p>
       </header>
-      
+
       <main className="main-content">
         <aside className="sidebar">
           <div className="control-group">
@@ -252,59 +252,75 @@ function App() {
 
           <div className="control-group">
             <h3>Orientation</h3>
-            <label className="slider-label">
+            <div className="slider-label">
               <span>Mode</span>
-              <select 
-                className="select-input"
-                value={config.orientationMode}
-                onChange={(e) => {
-                  setConfig({...config, orientationMode: e.target.value});
-                  if (e.target.value === 'molstar') {
-                    setViewMode('molstar');
-                  }
-                }}
-              >
-                <option value="auto">Auto Orient (PCA)</option>
-                <option value="sliders">Manual Sliders</option>
-                <option value="molstar">Molstar Viewer</option>
-              </select>
-            </label>
-            
+              <div className="segmented-control">
+                <button
+                  className={`segmented-btn ${config.orientationMode === 'auto' ? 'active' : ''}`}
+                  onClick={() => setConfig({ ...config, orientationMode: 'auto' })}
+                >Auto</button>
+                <button
+                  className={`segmented-btn ${config.orientationMode === 'sliders' ? 'active' : ''}`}
+                  onClick={() => setConfig({ ...config, orientationMode: 'sliders' })}
+                >Sliders</button>
+                <button
+                  className={`segmented-btn ${config.orientationMode === 'molstar' ? 'active' : ''}`}
+                  onClick={() => {
+                    setConfig({ ...config, orientationMode: 'molstar' });
+                    if (viewMode !== 'molstar') {
+                      setViewMode('molstar');
+                    }
+                  }}
+                >Molstar</button>
+              </div>
+            </div>
+
+            {config.orientationMode === 'molstar' && (
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={config.show_unit_cell}
+                  onChange={(e) => setConfig({ ...config, show_unit_cell: e.target.checked })}
+                />
+                <span>Show Unit Cell (Molstar)</span>
+              </label>
+            )}
+
             {config.orientationMode === 'sliders' && (
               <>
                 <label className="slider-label">
                   <span>Rotation X ({config.rotX}°)</span>
-                  <input 
-                    type="range" min="0" max="360" step="5" 
+                  <input
+                    type="range" min="0" max="360" step="5"
                     value={config.rotX}
-                    onChange={(e) => setConfig({...config, rotX: parseInt(e.target.value)})}
+                    onChange={(e) => setConfig({ ...config, rotX: parseInt(e.target.value) })}
                   />
                 </label>
 
                 <label className="slider-label">
                   <span>Rotation Y ({config.rotY}°)</span>
-                  <input 
-                    type="range" min="0" max="360" step="5" 
+                  <input
+                    type="range" min="0" max="360" step="5"
                     value={config.rotY}
-                    onChange={(e) => setConfig({...config, rotY: parseInt(e.target.value)})}
+                    onChange={(e) => setConfig({ ...config, rotY: parseInt(e.target.value) })}
                   />
                 </label>
 
                 <label className="slider-label">
                   <span>Rotation Z ({config.rotZ}°)</span>
-                  <input 
-                    type="range" min="0" max="360" step="5" 
+                  <input
+                    type="range" min="0" max="360" step="5"
                     value={config.rotZ}
-                    onChange={(e) => setConfig({...config, rotZ: parseInt(e.target.value)})}
+                    onChange={(e) => setConfig({ ...config, rotZ: parseInt(e.target.value) })}
                   />
                 </label>
-                
+
                 {(config.rotX !== 0 || config.rotY !== 0 || config.rotZ !== 0) && (
-                  <button 
+                  <button
                     className="reset-button"
-                    onClick={() => setConfig({...config, rotX: 0, rotY: 0, rotZ: 0})}
+                    onClick={() => setConfig({ ...config, rotX: 0, rotY: 0, rotZ: 0 })}
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '6px'}}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></svg>
                     Reset Rotation
                   </button>
                 )}
@@ -314,14 +330,14 @@ function App() {
 
           <div className="control-group">
             <h3>Styling</h3>
-            
+
             <label className="slider-label">
               <span>Config Preset</span>
-              <select 
+              <select
                 className="select-input"
                 value={config.preset}
                 onChange={(e) => setConfig({
-                  ...config, 
+                  ...config,
                   preset: e.target.value,
                   atom_scale: 1.0,
                   bond_width: 5
@@ -342,36 +358,36 @@ function App() {
 
             <label className="slider-label">
               <span>Atom Scale ({config.atom_scale})</span>
-              <input 
-                type="range" min="0.1" max="3.0" step="0.1" 
+              <input
+                type="range" min="0.1" max="3.0" step="0.1"
                 value={config.atom_scale}
-                onChange={(e) => setConfig({...config, atom_scale: parseFloat(e.target.value)})}
+                onChange={(e) => setConfig({ ...config, atom_scale: parseFloat(e.target.value) })}
               />
             </label>
 
             <label className="slider-label">
               <span>Bond Width ({config.bond_width})</span>
-              <input 
-                type="range" min="1" max="20" step="1" 
+              <input
+                type="range" min="1" max="20" step="1"
                 value={config.bond_width}
-                onChange={(e) => setConfig({...config, bond_width: parseFloat(e.target.value)})}
+                onChange={(e) => setConfig({ ...config, bond_width: parseFloat(e.target.value) })}
               />
             </label>
 
             <label className="color-label">
               <span>Background Color</span>
-              <input 
-                type="color" 
+              <input
+                type="color"
                 value={config.background}
-                onChange={(e) => setConfig({...config, background: e.target.value})}
+                onChange={(e) => setConfig({ ...config, background: e.target.value })}
               />
             </label>
 
             <label className="checkbox-label">
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 checked={config.transparent}
-                onChange={(e) => setConfig({...config, transparent: e.target.checked})}
+                onChange={(e) => setConfig({ ...config, transparent: e.target.checked })}
               />
               <span>Transparent Background</span>
             </label>
@@ -381,20 +397,20 @@ function App() {
             <h3>Display</h3>
 
             <label className="checkbox-label">
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 checked={config.hide_bonds}
-                onChange={(e) => setConfig({...config, hide_bonds: e.target.checked})}
+                onChange={(e) => setConfig({ ...config, hide_bonds: e.target.checked })}
               />
               <span>Hide Bonds</span>
             </label>
 
             <label className="slider-label">
               <span>Hydrogens</span>
-              <select 
+              <select
                 className="select-input"
                 value={config.hydrogen_display}
-                onChange={(e) => setConfig({...config, hydrogen_display: e.target.value})}
+                onChange={(e) => setConfig({ ...config, hydrogen_display: e.target.value })}
               >
                 <option value="default">Default</option>
                 <option value="show">Show All</option>
@@ -403,41 +419,31 @@ function App() {
             </label>
 
             <label className="checkbox-label">
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 checked={config.bo}
-                onChange={(e) => setConfig({...config, bo: e.target.checked})}
+                onChange={(e) => setConfig({ ...config, bo: e.target.checked })}
               />
               <span>Show Bond Orders</span>
             </label>
 
             <label className="checkbox-label">
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 checked={config.fog}
-                onChange={(e) => setConfig({...config, fog: e.target.checked})}
+                onChange={(e) => setConfig({ ...config, fog: e.target.checked })}
               />
               <span>Depth Fog</span>
             </label>
 
-            {config.orientationMode === 'molstar' && (
-              <label className="checkbox-label">
-                <input 
-                  type="checkbox" 
-                  checked={config.show_unit_cell}
-                  onChange={(e) => setConfig({...config, show_unit_cell: e.target.checked})}
-                />
-                <span>Show Unit Cell (Molstar)</span>
-              </label>
-            )}
 
             {config.fog && (
               <label className="slider-label">
                 <span>Fog Strength ({config.fog_strength})</span>
-                <input 
-                  type="range" min="0.1" max="5.0" step="0.1" 
+                <input
+                  type="range" min="0.1" max="5.0" step="0.1"
                   value={config.fog_strength}
-                  onChange={(e) => setConfig({...config, fog_strength: parseFloat(e.target.value)})}
+                  onChange={(e) => setConfig({ ...config, fog_strength: parseFloat(e.target.value) })}
                 />
               </label>
             )}
@@ -454,8 +460,8 @@ function App() {
           </div>
 
           <div className="button-group">
-            <button 
-              className="render-btn" 
+            <button
+              className="render-btn"
               onClick={handleRender}
               disabled={!fileContent || isRendering}
             >
@@ -487,7 +493,7 @@ function App() {
               </select>
             </div>
           </div>
-          <textarea 
+          <textarea
             className="file-input-textarea"
             value={fileContent || ''}
             onChange={(e) => {
@@ -505,13 +511,13 @@ function App() {
 
         <section className="preview-area">
           <div className="preview-header">
-            <button 
+            <button
               className={`view-toggle ${viewMode === 'molstar' ? 'active' : ''}`}
               onClick={() => setViewMode('molstar')}
             >
               Interactive View
             </button>
-            <button 
+            <button
               className={`view-toggle ${viewMode === 'svg' ? 'active' : ''}`}
               onClick={() => {
                 if (viewMode !== 'svg') {
@@ -527,19 +533,19 @@ function App() {
             </button>
           </div>
           <div className="preview-content" style={{ position: 'relative' }}>
-            <div style={{ 
-              visibility: viewMode === 'molstar' ? 'visible' : 'hidden', 
+            <div style={{
+              visibility: viewMode === 'molstar' ? 'visible' : 'hidden',
               opacity: viewMode === 'molstar' ? 1 : 0,
               position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
               transition: 'opacity 0.2s',
               zIndex: viewMode === 'molstar' ? 2 : 1
             }}>
               {fileContent ? (
-                <MolstarViewer 
-                  fileContent={fileContent} 
-                  filename={fileFormat !== "auto" ? `molecule.${fileFormat}` : filename} 
+                <MolstarViewer
+                  fileContent={fileContent}
+                  filename={fileFormat !== "auto" ? `molecule.${fileFormat}` : filename}
                   showUnitCell={config.show_unit_cell}
-                  onRotationChange={(matrix) => { rotMatrixRef.current = matrix; }} 
+                  onRotationChange={(matrix) => { rotMatrixRef.current = matrix; }}
                 />
               ) : (
                 <div className="placeholder">
@@ -547,8 +553,8 @@ function App() {
                 </div>
               )}
             </div>
-            <div style={{ 
-              visibility: viewMode === 'svg' ? 'visible' : 'hidden', 
+            <div style={{
+              visibility: viewMode === 'svg' ? 'visible' : 'hidden',
               opacity: viewMode === 'svg' ? 1 : 0,
               position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
               transition: 'opacity 0.2s',

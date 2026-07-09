@@ -502,3 +502,39 @@ input[type="color"]::-webkit-color-swatch {
   font-size: 0.85rem;
   cursor: pointer;
 }
+
+.segmented-control {
+  display: flex;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  width: 100%;
+}
+
+.segmented-btn {
+  flex: 1;
+  padding: 0.5rem 0.25rem;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.segmented-btn:last-child {
+  border-right: none;
+}
+
+.segmented-btn.active {
+  background: var(--primary-color);
+  color: white;
+}
+
+.segmented-btn:hover:not(.active) {
+  background: #f1f5f9;
+}
