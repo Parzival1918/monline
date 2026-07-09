@@ -8,6 +8,7 @@ function App() {
   const [isRendering, setIsRendering] = useState(false);
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [filename, setFilename] = useState<string>("molecule.xyz");
+  const [fileFormat, setFileFormat] = useState<string>("auto");
   const [viewMode, setViewMode] = useState<'molstar' | 'svg'>('molstar');
   const [config, setConfig] = useState({
     preset: "default",
@@ -24,6 +25,7 @@ function App() {
     rotX: 0,
     rotY: 0,
     rotZ: 0,
+    show_unit_cell: false,
   });
 
   const workerRef = useRef<Worker | null>(null);
@@ -86,12 +88,17 @@ function App() {
       rejectsRef.current[id] = reject;
     });
 
+    let actualFilename = filename;
+    if (fileFormat !== "auto") {
+      actualFilename = `molecule.${fileFormat}`;
+    }
+
     workerRef.current.postMessage({
       type: "RENDER",
       id,
         data: {
           fileContent,
-          filename,
+          filename: actualFilename,
           config: (() => {
             const wc: any = { ...config, config: config.preset };
             delete wc.preset;
@@ -134,6 +141,7 @@ function App() {
             // Force transparent for the UI renderer so the CSS background can handle color changes instantly
             wc.transparent = true;
             delete wc.background; // We handle background in CSS and download
+            delete wc.show_unit_cell; // Only used for Molstar UI
 
             return wc;
           })(),
@@ -237,7 +245,7 @@ function App() {
           <div className="control-group">
             <h3>Upload Molecule</h3>
             <label className="file-upload">
-              <input type="file" accept=".xyz,.cube,.sdf,.mol" onChange={handleFileUpload} />
+              <input type="file" accept=".xyz,.cube,.sdf,.mol,.pdb,.cif" onChange={handleFileUpload} />
               <span>Choose File</span>
             </label>
           </div>
@@ -412,6 +420,17 @@ function App() {
               <span>Depth Fog</span>
             </label>
 
+            {config.orientationMode === 'molstar' && (
+              <label className="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  checked={config.show_unit_cell}
+                  onChange={(e) => setConfig({...config, show_unit_cell: e.target.checked})}
+                />
+                <span>Show Unit Cell (Molstar)</span>
+              </label>
+            )}
+
             {config.fog && (
               <label className="slider-label">
                 <span>Fog Strength ({config.fog_strength})</span>
@@ -455,13 +474,32 @@ function App() {
         <section className="editor-area">
           <div className="editor-header">
             <h3>File Content</h3>
+            <div className="format-selector">
+              <label>Format: </label>
+              <select value={fileFormat} onChange={(e) => setFileFormat(e.target.value)}>
+                <option value="auto">Auto-detect</option>
+                <option value="xyz">XYZ</option>
+                <option value="cif">CIF</option>
+                <option value="pdb">PDB</option>
+                <option value="sdf">SDF</option>
+                <option value="mol">MOL</option>
+                <option value="cube">CUBE</option>
+              </select>
+            </div>
           </div>
           <textarea 
-            className="code-editor"
-            value={fileContent || ""}
-            onChange={(e) => setFileContent(e.target.value)}
-            disabled={!fileContent && !filename}
-            placeholder="Upload a file or paste molecule data here..."
+            className="file-input-textarea"
+            value={fileContent || ''}
+            onChange={(e) => {
+              const text = e.target.value;
+              setFileContent(text);
+              let ext = 'xyz';
+              if (text.includes('_cell_length_a') || text.trim().startsWith('data_')) ext = 'cif';
+              else if (text.startsWith('HEADER') || text.includes('ATOM  ')) ext = 'pdb';
+              else if (text.includes('$$$$') || text.includes('V2000') || text.includes('V3000')) ext = 'sdf';
+              setFilename(`molecule.${ext}`);
+            }}
+            placeholder="Paste a molecule (XYZ, PDB, CIF, SDF) and click Render..."
           />
         </section>
 
@@ -499,7 +537,8 @@ function App() {
               {fileContent ? (
                 <MolstarViewer 
                   fileContent={fileContent} 
-                  filename={filename} 
+                  filename={fileFormat !== "auto" ? `molecule.${fileFormat}` : filename} 
+                  showUnitCell={config.show_unit_cell}
                   onRotationChange={(matrix) => { rotMatrixRef.current = matrix; }} 
                 />
               ) : (

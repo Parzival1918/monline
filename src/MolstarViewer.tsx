@@ -3,11 +3,13 @@ import { createRoot } from 'react-dom/client';
 import { createPluginUI } from 'molstar/lib/mol-plugin-ui';
 import { DefaultPluginUISpec } from 'molstar/lib/mol-plugin-ui/spec';
 import { PluginUIContext } from 'molstar/lib/mol-plugin-ui/context';
+import { StateTransforms } from 'molstar/lib/mol-plugin-state/transforms';
 import 'molstar/lib/mol-plugin-ui/skin/light.scss';
 
 interface MolstarViewerProps {
   fileContent: string | null;
   filename: string;
+  showUnitCell?: boolean;
   onRotationChange: (rotMatrix: number[]) => void;
 }
 
@@ -45,7 +47,7 @@ const captureCameraState = (plugin: PluginUIContext, onRotationChange: (matrix: 
   }
 };
 
-const MolstarViewer: React.FC<MolstarViewerProps> = ({ fileContent, filename, onRotationChange }) => {
+const MolstarViewer: React.FC<MolstarViewerProps> = ({ fileContent, filename, showUnitCell = false, onRotationChange }) => {
   const parentRef = useRef<HTMLDivElement>(null);
   const pluginRef = useRef<PluginUIContext | null>(null);
   const [pluginReady, setPluginReady] = React.useState(false);
@@ -119,6 +121,13 @@ const MolstarViewer: React.FC<MolstarViewerProps> = ({ fileContent, filename, on
         const trajectory = await plugin.builders.structure.parseTrajectory(data, format as any);
         await plugin.builders.structure.hierarchy.applyPreset(trajectory, 'default');
         
+        if (showUnitCell) {
+          const models = plugin.managers.structure.hierarchy.current.models;
+          if (models && models.length > 0) {
+            await plugin.build().to(models[0].cell).apply(StateTransforms.Representation.ModelUnitcell3D).commit();
+          }
+        }
+        
         // Wait a small tick to ensure camera animations finish setting up
         setTimeout(() => {
           if (pluginRef.current) {
@@ -131,7 +140,7 @@ const MolstarViewer: React.FC<MolstarViewerProps> = ({ fileContent, filename, on
     };
 
     loadStructure();
-  }, [fileContent, filename, pluginReady]);
+  }, [fileContent, filename, pluginReady, showUnitCell]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return <div ref={parentRef} style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }} />;
 };

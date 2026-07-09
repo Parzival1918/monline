@@ -12,7 +12,7 @@ async function initPyodide() {
   const micropip = pyodideInstance.pyimport("micropip");
 
   // Install dependencies that Pyodide can handle
-  await micropip.install(["numpy", "Pillow", "networkx", "cclib"]);
+  await micropip.install(["numpy", "Pillow", "networkx", "cclib", "ase"]);
 
   // We need to mock cairosvg and resvg-py as they are C/Rust dependencies 
   // that xyzrender tries to import for PNG conversion.
