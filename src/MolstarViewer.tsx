@@ -112,11 +112,11 @@ const MolstarViewer: React.FC<MolstarViewerProps> = ({ fileContent, filename, sh
       try {
         const data = await plugin.builders.data.rawData({ data: fileContent });
         
-        let format: 'xyz' | 'sdf' | 'cube' | 'pdb' | 'cif' = 'xyz';
+        let format: string = 'xyz';
         const ext = filename.split('.').pop()?.toLowerCase();
         if (ext === 'mol' || ext === 'sdf') format = 'sdf';
         else if (ext === 'pdb') format = 'pdb';
-        else if (ext === 'cif') format = 'cif';
+        else if (ext === 'cif') format = 'cifCore';
 
         const trajectory = await plugin.builders.structure.parseTrajectory(data, format as any);
         await plugin.builders.structure.hierarchy.applyPreset(trajectory, 'default');
