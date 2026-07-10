@@ -67,6 +67,7 @@ function App() {
     ghosts_display: "default",
     axes_display: "default",
     supercell: [1, 1, 1],
+    highlights: [] as { regions: string, color: string }[],
   });
 
   const workerRef = useRef<Worker | null>(null);
@@ -77,7 +78,7 @@ function App() {
 
   useEffect(() => {
     // Initialize Web Worker using Vite's BASE_URL with cache busting
-    workerRef.current = new Worker(import.meta.env.BASE_URL + 'pyodide-worker.js?v=3');
+    workerRef.current = new Worker(import.meta.env.BASE_URL + 'pyodide-worker.js?v=4');
 
     workerRef.current.onmessage = (event) => {
       const { type, text, id, svg, error } = event.data;
@@ -211,6 +212,13 @@ function App() {
             delete wc.supercell;
           }
 
+          if (config.highlights && config.highlights.length > 0) {
+            wc.highlight = config.highlights
+              .filter(h => h.regions.trim() !== '')
+              .map(h => h.color ? [h.regions, h.color] : [h.regions]);
+          }
+          delete wc.highlights;
+
           return wc;
         })(),
       },
@@ -309,6 +317,17 @@ function App() {
 
     if (config.supercell[0] !== 1 || config.supercell[1] !== 1 || config.supercell[2] !== 1) {
       cmd += ` --supercell ${config.supercell.join('x')}`;
+    }
+
+    if (config.highlights) {
+      config.highlights.forEach(h => {
+        if (h.regions.trim()) {
+          cmd += ` --hl "${h.regions}"`;
+          if (h.color) {
+            cmd += ` "${h.color}"`;
+          }
+        }
+      });
     }
 
     return cmd;
@@ -570,6 +589,55 @@ function App() {
                 />
               </label>
             )}
+          </div>
+
+          <div className="control-group">
+            <h3>Highlights</h3>
+            {config.highlights.map((hl, idx) => (
+              <div key={idx} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  placeholder="e.g. 1-5,8"
+                  value={hl.regions}
+                  onChange={(e) => {
+                    const newHighlights = [...config.highlights];
+                    newHighlights[idx].regions = e.target.value;
+                    setConfig({ ...config, highlights: newHighlights });
+                  }}
+                  style={{ flex: 1, padding: '6px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--panel-bg)', color: 'var(--text-main)', fontSize: '0.875rem' }}
+                />
+                <input
+                  type="color"
+                  value={hl.color || '#ff0000'}
+                  onChange={(e) => {
+                    const newHighlights = [...config.highlights];
+                    newHighlights[idx].color = e.target.value;
+                    setConfig({ ...config, highlights: newHighlights });
+                  }}
+                  title="Highlight Color"
+                  style={{ width: '32px', height: '32px', padding: '0', border: '1px solid var(--border-color)', borderRadius: '4px', cursor: 'pointer' }}
+                />
+                <button
+                  className="icon-button"
+                  onClick={() => {
+                    const newHighlights = config.highlights.filter((_, i) => i !== idx);
+                    setConfig({ ...config, highlights: newHighlights });
+                  }}
+                  title="Remove"
+                  style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={() => setConfig({ ...config, highlights: [...config.highlights, { regions: '', color: '#ff0000' }] })}
+              style={{ width: '100%', padding: '8px', borderRadius: '4px', background: 'var(--bg-main)', color: 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}
+              onMouseOver={(e) => (e.currentTarget.style.borderColor = 'var(--primary-color)')}
+              onMouseOut={(e) => (e.currentTarget.style.borderColor = 'var(--border-color)')}
+            >
+              + Add Highlight
+            </button>
           </div>
 
           <div className="control-group">

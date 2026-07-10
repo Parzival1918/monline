@@ -70,6 +70,9 @@ import numpy as np
 from xyzrender.api import load, render, orient
 
 config_dict = json.loads(config_json)
+if 'highlight' in config_dict and isinstance(config_dict['highlight'], list):
+    config_dict['highlight'] = [tuple(h) if isinstance(h, list) else h for h in config_dict['highlight']]
+
 mol = load(filename)
 
 rotX = config_dict.pop('rotX', 0)
