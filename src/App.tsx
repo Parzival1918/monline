@@ -31,7 +31,7 @@ function App() {
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [filename, setFilename] = useState<string>("molecule.xyz");
   const [fileFormat, setFileFormat] = useState<string>("auto");
-  const [viewMode, setViewMode] = useState<'molstar' | 'svg'>('molstar');
+  const [viewMode, setViewMode] = useState<'interactive' | 'svg'>('interactive');
   const [config, setConfig] = useState({
     preset: "default",
     atom_scale: 1.0,
@@ -150,7 +150,7 @@ function App() {
             delete wc.rotX; delete wc.rotY; delete wc.rotZ;
           } else if (config.orientationMode === 'sliders') {
             wc.orient = false;
-          } else if (config.orientationMode === 'molstar') {
+          } else if (config.orientationMode === 'interactive') {
             wc.orient = false;
             delete wc.rotX; delete wc.rotY; delete wc.rotZ;
             if (rotMatrixRef.current) {
@@ -163,7 +163,7 @@ function App() {
           // Force transparent for the UI renderer so the CSS background can handle color changes instantly
           wc.transparent = true;
           delete wc.background; // We handle background in CSS and download
-          delete wc.show_unit_cell; // Only used for Molstar UI
+          delete wc.show_unit_cell; // Only used for Interactive UI
 
           return wc;
         })(),
@@ -285,14 +285,14 @@ function App() {
                   onClick={() => setConfig({ ...config, orientationMode: 'sliders' })}
                 >Sliders</button>
                 <button
-                  className={`segmented-btn ${config.orientationMode === 'molstar' ? 'active' : ''}`}
+                  className={`segmented-btn ${config.orientationMode === 'interactive' ? 'active' : ''}`}
                   onClick={() => {
-                    setConfig({ ...config, orientationMode: 'molstar' });
-                    if (viewMode !== 'molstar') {
-                      setViewMode('molstar');
+                    setConfig({ ...config, orientationMode: 'interactive' });
+                    if (viewMode !== 'interactive') {
+                      setViewMode('interactive');
                     }
                   }}
-                >Molstar</button>
+                >Interactive</button>
               </div>
             </div>
 
@@ -302,7 +302,7 @@ function App() {
                 checked={config.show_unit_cell}
                 onChange={(e) => setConfig({ ...config, show_unit_cell: e.target.checked })}
               />
-              <span>Show Unit Cell (Molstar)</span>
+              <span>Show Unit Cell (Interactive)</span>
             </label>
 
             {config.orientationMode === 'sliders' && (
@@ -531,8 +531,8 @@ function App() {
         <section className="preview-area">
           <div className="preview-header">
             <button
-              className={`view-toggle ${viewMode === 'molstar' ? 'active' : ''}`}
-              onClick={() => setViewMode('molstar')}
+              className={`view-toggle ${viewMode === 'interactive' ? 'active' : ''}`}
+              onClick={() => setViewMode('interactive')}
             >
               Interactive View
             </button>
@@ -540,7 +540,7 @@ function App() {
               className={`view-toggle ${viewMode === 'svg' ? 'active' : ''}`}
               onClick={() => {
                 if (viewMode !== 'svg') {
-                  if (config.orientationMode === 'molstar') {
+                  if (config.orientationMode === 'interactive') {
                     handleRender();
                   } else {
                     setViewMode('svg');
@@ -553,11 +553,11 @@ function App() {
           </div>
           <div className="preview-content" style={{ position: 'relative' }}>
             <div style={{
-              visibility: viewMode === 'molstar' ? 'visible' : 'hidden',
-              opacity: viewMode === 'molstar' ? 1 : 0,
+              visibility: viewMode === 'interactive' ? 'visible' : 'hidden',
+              opacity: viewMode === 'interactive' ? 1 : 0,
               position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
               transition: 'opacity 0.2s',
-              zIndex: viewMode === 'molstar' ? 2 : 1
+              zIndex: viewMode === 'interactive' ? 2 : 1
             }}>
               {fileContent ? (
                 <MolstarViewer
