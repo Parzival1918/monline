@@ -126,7 +126,16 @@ const MolstarViewer: React.FC<MolstarViewerProps> = ({ fileContent, filename, sh
         else if (ext === 'cif') format = 'cifCore';
 
         const trajectory = await plugin.builders.structure.parseTrajectory(data, format as any);
-        await plugin.builders.structure.hierarchy.applyPreset(trajectory, 'default');
+        
+        let applyParams: any = {};
+        if (showUnitCell) {
+          applyParams.structure = {
+            name: 'symmetry',
+            params: { ijkMin: [0, 0, 0], ijkMax: [0, 0, 0] }
+          };
+        }
+
+        await plugin.builders.structure.hierarchy.applyPreset(trajectory, 'default', applyParams);
         
         if (showUnitCell) {
           const models = plugin.managers.structure.hierarchy.current.models;
