@@ -296,16 +296,14 @@ function App() {
               </div>
             </div>
 
-            {config.orientationMode === 'molstar' && (
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={config.show_unit_cell}
-                  onChange={(e) => setConfig({ ...config, show_unit_cell: e.target.checked })}
-                />
-                <span>Show Unit Cell (Molstar)</span>
-              </label>
-            )}
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={config.show_unit_cell}
+                onChange={(e) => setConfig({ ...config, show_unit_cell: e.target.checked })}
+              />
+              <span>Show Unit Cell (Molstar)</span>
+            </label>
 
             {config.orientationMode === 'sliders' && (
               <>
