@@ -61,6 +61,12 @@ function App() {
     rotY: 0,
     rotZ: 0,
     show_unit_cell: false,
+    cell_display: "default",
+    cell_color: "#000000",
+    cell_width: 2.0,
+    ghosts_display: "default",
+    axes_display: "default",
+    supercell: [1, 1, 1],
   });
 
   const workerRef = useRef<Worker | null>(null);
@@ -179,6 +185,32 @@ function App() {
           delete wc.background; // We handle background in CSS and download
           delete wc.show_unit_cell; // Only used for Interactive UI
 
+          if (config.cell_display === "show") {
+            wc.no_cell = false;
+            // leave cell_color and cell_width intact from the initial spread
+          } else if (config.cell_display === "hide") {
+            wc.no_cell = true;
+            delete wc.cell_color;
+            delete wc.cell_width;
+          } else {
+            // default
+            delete wc.cell_color;
+            delete wc.cell_width;
+          }
+          delete wc.cell_display;
+
+          if (config.ghosts_display === "show") wc.ghosts = true;
+          if (config.ghosts_display === "hide") wc.ghosts = false;
+          delete wc.ghosts_display;
+
+          if (config.axes_display === "show") wc.axes = true;
+          if (config.axes_display === "hide") wc.axes = false;
+          delete wc.axes_display;
+
+          if (config.supercell[0] === 1 && config.supercell[1] === 1 && config.supercell[2] === 1) {
+            delete wc.supercell;
+          }
+
           return wc;
         })(),
       },
@@ -260,6 +292,25 @@ function App() {
       cmd += ` --fog`;
       if (config.fog_strength !== 1.0) cmd += ` --fog-strength ${config.fog_strength}`;
     }
+
+    if (config.cell_display === "show") {
+      cmd += ` --cell`;
+      if (config.cell_color !== "#000000") cmd += ` --cell-color "${config.cell_color}"`;
+      if (config.cell_width !== 2.0) cmd += ` --cell-width ${config.cell_width}`;
+    } else if (config.cell_display === "hide") {
+      cmd += ` --no-cell`;
+    }
+
+    if (config.ghosts_display === "show") cmd += ` --ghosts`;
+    if (config.ghosts_display === "hide") cmd += ` --no-ghosts`;
+
+    if (config.axes_display === "show") cmd += ` --axes`;
+    if (config.axes_display === "hide") cmd += ` --no-axes`;
+
+    if (config.supercell[0] !== 1 || config.supercell[1] !== 1 || config.supercell[2] !== 1) {
+      cmd += ` --supercell ${config.supercell.join('x')}`;
+    }
+
     return cmd;
   };
 
@@ -519,6 +570,126 @@ function App() {
                 />
               </label>
             )}
+          </div>
+
+          <div className="control-group">
+            <h3>Unit Cell & Axes</h3>
+
+            <label className="slider-label">
+              <span>Unit Cell Box</span>
+              <select
+                className="select-input"
+                value={config.cell_display}
+                onChange={(e) => setConfig({ ...config, cell_display: e.target.value })}
+              >
+                <option value="default">Default</option>
+                <option value="show">Show</option>
+                <option value="hide">Hide</option>
+              </select>
+            </label>
+
+            {config.cell_display === "show" && (
+              <>
+                <label className="color-label">
+                  <span>Cell Color</span>
+                  <input
+                    type="color"
+                    value={config.cell_color}
+                    onChange={(e) => setConfig({ ...config, cell_color: e.target.value })}
+                  />
+                </label>
+                <div className="number-input-group">
+                  <span>Cell Width</span>
+                  <div className="number-input-controls">
+                    <button
+                      className="icon-button"
+                      onClick={() => setConfig({ ...config, cell_width: Math.max(0.1, Math.round((config.cell_width - 0.5) * 10) / 10) })}
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number" min="0.1" step="0.5"
+                      value={config.cell_width}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val)) setConfig({ ...config, cell_width: Math.max(0.1, val) });
+                      }}
+                    />
+                    <button
+                      className="icon-button"
+                      onClick={() => setConfig({ ...config, cell_width: Math.round((config.cell_width + 0.5) * 10) / 10 })}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+
+            <label className="slider-label">
+              <span>Ghost Atoms</span>
+              <select
+                className="select-input"
+                value={config.ghosts_display}
+                onChange={(e) => setConfig({ ...config, ghosts_display: e.target.value })}
+              >
+                <option value="default">Default</option>
+                <option value="show">Show</option>
+                <option value="hide">Hide</option>
+              </select>
+            </label>
+
+            <label className="slider-label">
+              <span>Axes</span>
+              <select
+                className="select-input"
+                value={config.axes_display}
+                onChange={(e) => setConfig({ ...config, axes_display: e.target.value })}
+              >
+                <option value="default">Default</option>
+                <option value="show">Show</option>
+                <option value="hide">Hide</option>
+              </select>
+            </label>
+
+            <label className="slider-label">
+              <span>Supercell</span>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={config.supercell[0]}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    if (!isNaN(val) && val > 0) setConfig({ ...config, supercell: [val, config.supercell[1], config.supercell[2]] });
+                  }}
+                  style={{ width: '40px', textAlign: 'center', backgroundColor: 'var(--panel-bg)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '4px' }}
+                />
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={config.supercell[1]}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    if (!isNaN(val) && val > 0) setConfig({ ...config, supercell: [config.supercell[0], val, config.supercell[2]] });
+                  }}
+                  style={{ width: '40px', textAlign: 'center', backgroundColor: 'var(--panel-bg)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '4px' }}
+                />
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={config.supercell[2]}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    if (!isNaN(val) && val > 0) setConfig({ ...config, supercell: [config.supercell[0], config.supercell[1], val] });
+                  }}
+                  style={{ width: '40px', textAlign: 'center', backgroundColor: 'var(--panel-bg)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '4px' }}
+                />
+              </div>
+            </label>
           </div>
 
           <div className="cli-section">
