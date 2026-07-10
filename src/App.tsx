@@ -3,6 +3,19 @@ import './App.css';
 import MolstarViewer from './MolstarViewer';
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
+const PRESET_DEFAULTS: Record<string, { scale: number, width: number }> = {
+  default: { scale: 2.5, width: 20 },
+  vdw: { scale: 10.0, width: 5 },
+  flat: { scale: 1.0, width: 5 },
+  paton: { scale: 1.0, width: 5 },
+  skeletal: { scale: 2.5, width: 14 },
+  bubble: { scale: 5.5, width: 5 },
+  tube: { scale: 0.0, width: 50 },
+  mtube: { scale: 0.0, width: 50 },
+  wire: { scale: 0.0, width: 10 },
+  graph: { scale: 0.9, width: 8 },
+};
+
 const Logo = () => (
   <svg width="46" height="35" viewBox="0 0 130 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M20 80 L20 30 L45 60 L70 30 L70 80" stroke="var(--primary-color)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
@@ -34,8 +47,8 @@ function App() {
   const [viewMode, setViewMode] = useState<'interactive' | 'svg'>('interactive');
   const [config, setConfig] = useState({
     preset: "default",
-    atom_scale: 1.0,
-    bond_width: 5,
+    atom_scale: 2.5,
+    bond_width: 20,
     background: "#ffffff",
     transparent: true,
     orientationMode: "auto",
@@ -129,8 +142,9 @@ function App() {
           if (config.hydrogen_display === "show") wc.hy = true;
           if (config.hydrogen_display === "hide") wc.no_hy = true;
 
-          if (wc.atom_scale === 1.0) delete wc.atom_scale;
-          if (wc.bond_width === 5) delete wc.bond_width;
+          const presetDefaults = PRESET_DEFAULTS[wc.config] || { scale: 1.0, width: 5 };
+          if (wc.atom_scale === presetDefaults.scale) delete wc.atom_scale;
+          if (wc.bond_width === presetDefaults.width) delete wc.bond_width;
           if (wc.background === "#ffffff") delete wc.background;
           if (wc.transparent === false) delete wc.transparent;
           if (wc.hide_bonds === false) delete wc.hide_bonds;
@@ -227,8 +241,9 @@ function App() {
   const getCliCommand = () => {
     let cmd = `xyzrender ${filename || "molecule.xyz"}`;
     if (config.preset !== "default") cmd += ` --config ${config.preset}`;
-    if (config.atom_scale !== 1.0) cmd += ` --atom-scale ${config.atom_scale}`;
-    if (config.bond_width !== 5) cmd += ` --bond-width ${config.bond_width}`;
+    const presetDefaults = PRESET_DEFAULTS[config.preset] || { scale: 1.0, width: 5 };
+    if (config.atom_scale !== presetDefaults.scale) cmd += ` --atom-scale ${config.atom_scale}`;
+    if (config.bond_width !== presetDefaults.width) cmd += ` --bond-width ${config.bond_width}`;
     if (!config.transparent && config.background !== "#ffffff") cmd += ` --background "${config.background}"`;
     if (config.transparent) cmd += ` --transparent`;
     if (config.orientationMode === 'auto') cmd += ` --orient`;
@@ -355,12 +370,16 @@ function App() {
               <select
                 className="select-input"
                 value={config.preset}
-                onChange={(e) => setConfig({
-                  ...config,
-                  preset: e.target.value,
-                  atom_scale: 1.0,
-                  bond_width: 5
-                })}
+                onChange={(e) => {
+                  const preset = e.target.value;
+                  const defaults = PRESET_DEFAULTS[preset] || { scale: 1.0, width: 5 };
+                  setConfig({
+                    ...config,
+                    preset: preset,
+                    atom_scale: defaults.scale,
+                    bond_width: defaults.width
+                  });
+                }}
               >
                 <option value="default">Default</option>
                 <option value="vdw">VdW</option>
@@ -375,23 +394,57 @@ function App() {
               </select>
             </label>
 
-            <label className="slider-label">
-              <span>Atom Scale ({config.atom_scale})</span>
-              <input
-                type="range" min="0.1" max="3.0" step="0.1"
-                value={config.atom_scale}
-                onChange={(e) => setConfig({ ...config, atom_scale: parseFloat(e.target.value) })}
-              />
-            </label>
+            <div className="number-input-group">
+              <span>Atom Scale</span>
+              <div className="number-input-controls">
+                <button
+                  className="icon-button"
+                  onClick={() => setConfig({ ...config, atom_scale: Math.max(0, Math.round((config.atom_scale - 0.1) * 10) / 10) })}
+                >
+                  -
+                </button>
+                <input
+                  type="number" min="0" step="0.1"
+                  value={config.atom_scale}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    if (!isNaN(val)) setConfig({ ...config, atom_scale: Math.max(0, val) });
+                  }}
+                />
+                <button
+                  className="icon-button"
+                  onClick={() => setConfig({ ...config, atom_scale: Math.round((config.atom_scale + 0.1) * 10) / 10 })}
+                >
+                  +
+                </button>
+              </div>
+            </div>
 
-            <label className="slider-label">
-              <span>Bond Width ({config.bond_width})</span>
-              <input
-                type="range" min="1" max="20" step="1"
-                value={config.bond_width}
-                onChange={(e) => setConfig({ ...config, bond_width: parseFloat(e.target.value) })}
-              />
-            </label>
+            <div className="number-input-group">
+              <span>Bond Width</span>
+              <div className="number-input-controls">
+                <button
+                  className="icon-button"
+                  onClick={() => setConfig({ ...config, bond_width: Math.max(0, config.bond_width - 1) })}
+                >
+                  -
+                </button>
+                <input
+                  type="number" min="0" step="1"
+                  value={config.bond_width}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    if (!isNaN(val)) setConfig({ ...config, bond_width: Math.max(0, val) });
+                  }}
+                />
+                <button
+                  className="icon-button"
+                  onClick={() => setConfig({ ...config, bond_width: config.bond_width + 1 })}
+                >
+                  +
+                </button>
+              </div>
+            </div>
 
             <label className="color-label">
               <span>Background Color</span>
