@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import './App.css';
 import MolstarViewer from './MolstarViewer';
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import { BENZENE_XYZ, BENZENE_CIF, WATER_XYZ, NACL_CIF, SILICON_CIF } from './examples';
 
 const PRESET_DEFAULTS: Record<string, { scale: number, width: number }> = {
   default: { scale: 2.5, width: 20 },
@@ -69,6 +70,7 @@ function App() {
     supercell: [1, 1, 1],
     highlights: [] as { regions: string, color: string }[],
   });
+  const [showExamples, setShowExamples] = useState(false);
 
   const workerRef = useRef<Worker | null>(null);
   const messageIdRef = useRef(0);
@@ -354,6 +356,72 @@ function App() {
               <input type="file" accept=".xyz,.cube,.sdf,.mol,.pdb,.cif" onChange={handleFileUpload} />
               <span>Choose File</span>
             </label>
+            <div style={{ marginTop: '12px' }}>
+              <button 
+                onClick={() => setShowExamples(!showExamples)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.875rem', padding: '4px 0', display: 'flex', alignItems: 'center', gap: '4px' }}
+              >
+                {showExamples ? '▼ Hide Examples' : '▶ Show Examples'}
+              </button>
+              <div 
+                style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '8px', 
+                  overflow: 'hidden',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  maxHeight: showExamples ? '200px' : '0',
+                  opacity: showExamples ? 1 : 0,
+                  marginTop: showExamples ? '8px' : '0'
+                }}
+              >
+                <button 
+                  className="example-btn"
+                  onClick={() => { setFileContent(BENZENE_XYZ); setFilename('benzene.xyz'); setFileFormat('xyz'); }}
+                  style={{ padding: '8px', borderRadius: '4px', background: 'var(--bg-main)', color: 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', fontSize: '0.75rem' }}
+                  onMouseOver={(e) => (e.currentTarget.style.borderColor = 'var(--primary-color)')}
+                  onMouseOut={(e) => (e.currentTarget.style.borderColor = 'var(--border-color)')}
+                >
+                  Benzene Molecule
+                </button>
+                <button 
+                  className="example-btn"
+                  onClick={() => { setFileContent(WATER_XYZ); setFilename('water.xyz'); setFileFormat('xyz'); }}
+                  style={{ padding: '8px', borderRadius: '4px', background: 'var(--bg-main)', color: 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', fontSize: '0.75rem' }}
+                  onMouseOver={(e) => (e.currentTarget.style.borderColor = 'var(--primary-color)')}
+                  onMouseOut={(e) => (e.currentTarget.style.borderColor = 'var(--border-color)')}
+                >
+                  Water Molecule
+                </button>
+                <button 
+                  className="example-btn"
+                  onClick={() => { setFileContent(BENZENE_CIF); setFilename('benzene.cif'); setFileFormat('cif'); }}
+                  style={{ padding: '8px', borderRadius: '4px', background: 'var(--bg-main)', color: 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', fontSize: '0.75rem' }}
+                  onMouseOver={(e) => (e.currentTarget.style.borderColor = 'var(--primary-color)')}
+                  onMouseOut={(e) => (e.currentTarget.style.borderColor = 'var(--border-color)')}
+                >
+                  Benzene Crystal
+                </button>
+                <button 
+                  className="example-btn"
+                  onClick={() => { setFileContent(NACL_CIF); setFilename('nacl.cif'); setFileFormat('cif'); }}
+                  style={{ padding: '8px', borderRadius: '4px', background: 'var(--bg-main)', color: 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', fontSize: '0.75rem' }}
+                  onMouseOver={(e) => (e.currentTarget.style.borderColor = 'var(--primary-color)')}
+                  onMouseOut={(e) => (e.currentTarget.style.borderColor = 'var(--border-color)')}
+                >
+                  NaCl Crystal
+                </button>
+                <button 
+                  className="example-btn"
+                  onClick={() => { setFileContent(SILICON_CIF); setFilename('silicon.cif'); setFileFormat('cif'); }}
+                  style={{ padding: '8px', borderRadius: '4px', background: 'var(--bg-main)', color: 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', fontSize: '0.75rem', gridColumn: 'span 2' }}
+                  onMouseOver={(e) => (e.currentTarget.style.borderColor = 'var(--primary-color)')}
+                  onMouseOut={(e) => (e.currentTarget.style.borderColor = 'var(--border-color)')}
+                >
+                  Silicon Crystal
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="control-group">
