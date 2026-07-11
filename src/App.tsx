@@ -45,7 +45,8 @@ function App() {
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [filename, setFilename] = useState<string>("molecule.xyz");
   const [fileFormat, setFileFormat] = useState<string>("auto");
-  const [viewMode, setViewMode] = useState<'interactive' | 'svg'>('interactive');
+  const [viewMode, setViewMode] = useState<'interactive' | 'svg' | 'log'>('interactive');
+  const [logs, setLogs] = useState<{timestamp: Date, type: 'info' | 'error', message: string}[]>([]);
   const [config, setConfig] = useState({
     preset: "default",
     atom_scale: 2.5,
@@ -87,6 +88,7 @@ function App() {
 
       if (type === "status") {
         setStatus(text);
+        setLogs(prev => [...prev, { timestamp: new Date(), type: 'info', message: text }]);
       } else if (type === "RESULT") {
         if (resolvesRef.current[id]) {
           resolvesRef.current[id](svg);
@@ -100,6 +102,8 @@ function App() {
           delete rejectsRef.current[id];
         }
         setStatus("Error: " + error);
+        setLogs(prev => [...prev, { timestamp: new Date(), type: 'error', message: error }]);
+        setViewMode('log');
       }
     };
 
@@ -125,6 +129,7 @@ function App() {
 
     setIsRendering(true);
     setStatus("Rendering...");
+    setLogs(prev => [...prev, { timestamp: new Date(), type: 'info', message: "Rendering started..." }]);
     const id = messageIdRef.current++;
 
     const promise = new Promise<string>((resolve, reject) => {
@@ -239,9 +244,12 @@ function App() {
       setSvgOutput(svg);
       setViewMode('svg');
       setStatus("Render complete!");
+      setLogs(prev => [...prev, { timestamp: new Date(), type: 'info', message: "Render complete!" }]);
     } catch (err) {
       console.error(err);
       setStatus("Render failed.");
+      setLogs(prev => [...prev, { timestamp: new Date(), type: 'error', message: `Render failed: ${err}` }]);
+      setViewMode('log');
     } finally {
       setIsRendering(false);
     }
@@ -957,6 +965,12 @@ function App() {
             >
               Rendered SVG
             </button>
+            <button
+              className={`view-toggle ${viewMode === 'log' ? 'active' : ''}`}
+              onClick={() => setViewMode('log')}
+            >
+              Log
+            </button>
           </div>
           <div className="preview-content" style={{ position: 'relative' }}>
             <div style={{
@@ -996,6 +1010,32 @@ function App() {
               ) : (
                 <div className="placeholder">
                   <p>Upload or paste a molecule and click Render</p>
+                </div>
+              )}
+            </div>
+            <div style={{
+              visibility: viewMode === 'log' ? 'visible' : 'hidden',
+              opacity: viewMode === 'log' ? 1 : 0,
+              position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+              transition: 'opacity 0.2s',
+              zIndex: viewMode === 'log' ? 2 : 1,
+              backgroundColor: 'var(--panel-bg)',
+              overflowY: 'auto',
+              padding: '16px',
+              fontFamily: 'monospace',
+              fontSize: '0.875rem'
+            }}>
+              {logs.length > 0 ? (
+                <div className="log-container">
+                  {logs.map((log, i) => (
+                    <div key={i} style={{ color: log.type === 'error' ? '#ef4444' : 'var(--text-main)', marginBottom: '4px', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>[{log.timestamp.toLocaleTimeString()}]</span> {log.message}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="placeholder">
+                  <p>No logs available yet</p>
                 </div>
               )}
             </div>
