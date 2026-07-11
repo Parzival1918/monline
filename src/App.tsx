@@ -61,13 +61,13 @@ function App() {
     rotX: 0,
     rotY: 0,
     rotZ: 0,
-    show_unit_cell: false,
+    show_unit_cell: true,
     cell_display: "default",
     cell_color: "#000000",
     cell_width: 2.0,
     ghosts_display: "default",
     axes_display: "default",
-    supercell: [1, 1, 1],
+    supercell: [1, 1, 1] as (number | string)[],
     highlights: [] as { regions: string, color: string }[],
   });
   const [showExamples, setShowExamples] = useState(false);
@@ -210,7 +210,15 @@ function App() {
           if (config.axes_display === "hide") wc.axes = false;
           delete wc.axes_display;
 
-          if (config.supercell[0] === 1 && config.supercell[1] === 1 && config.supercell[2] === 1) {
+          let scX = parseInt(config.supercell[0] as string);
+          let scY = parseInt(config.supercell[1] as string);
+          let scZ = parseInt(config.supercell[2] as string);
+          if (isNaN(scX) || scX <= 0) scX = 1;
+          if (isNaN(scY) || scY <= 0) scY = 1;
+          if (isNaN(scZ) || scZ <= 0) scZ = 1;
+          wc.supercell = [scX, scY, scZ];
+
+          if (wc.supercell[0] === 1 && wc.supercell[1] === 1 && wc.supercell[2] === 1) {
             delete wc.supercell;
           }
 
@@ -317,8 +325,14 @@ function App() {
     if (config.axes_display === "show") cmd += ` --axes`;
     if (config.axes_display === "hide") cmd += ` --no-axes`;
 
-    if (config.supercell[0] !== 1 || config.supercell[1] !== 1 || config.supercell[2] !== 1) {
-      cmd += ` --supercell ${config.supercell.join('x')}`;
+    let scX = parseInt(config.supercell[0] as string);
+    let scY = parseInt(config.supercell[1] as string);
+    let scZ = parseInt(config.supercell[2] as string);
+    if (isNaN(scX) || scX <= 0) scX = 1;
+    if (isNaN(scY) || scY <= 0) scY = 1;
+    if (isNaN(scZ) || scZ <= 0) scZ = 1;
+    if (scX !== 1 || scY !== 1 || scZ !== 1) {
+      cmd += ` --supercell ${scX}x${scY}x${scZ}`;
     }
 
     if (config.highlights) {
@@ -788,19 +802,30 @@ function App() {
               </select>
             </label>
 
-            <label className="slider-label">
+            <div className="number-input-group">
               <span>Supercell</span>
-              <div style={{ display: 'flex', gap: '4px' }}>
+              <div className="number-input-controls">
                 <input
                   type="number"
                   min="1"
                   step="1"
                   value={config.supercell[0]}
                   onChange={(e) => {
-                    const val = parseInt(e.target.value);
-                    if (!isNaN(val) && val > 0) setConfig({ ...config, supercell: [val, config.supercell[1], config.supercell[2]] });
+                    const raw = e.target.value;
+                    if (raw === "") {
+                      setConfig({ ...config, supercell: ["", config.supercell[1], config.supercell[2]] });
+                    } else {
+                      const val = parseInt(raw);
+                      if (!isNaN(val)) setConfig({ ...config, supercell: [val, config.supercell[1], config.supercell[2]] });
+                    }
                   }}
-                  style={{ width: '40px', textAlign: 'center', backgroundColor: 'var(--panel-bg)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '4px' }}
+                  onBlur={(e) => {
+                    let val = parseInt(e.target.value);
+                    if (isNaN(val) || val <= 0) val = 1;
+                    if (val !== config.supercell[0]) setConfig({ ...config, supercell: [val, config.supercell[1], config.supercell[2]] });
+                  }}
+                  style={{ borderLeft: 'none' }}
+                  title="X"
                 />
                 <input
                   type="number"
@@ -808,10 +833,21 @@ function App() {
                   step="1"
                   value={config.supercell[1]}
                   onChange={(e) => {
-                    const val = parseInt(e.target.value);
-                    if (!isNaN(val) && val > 0) setConfig({ ...config, supercell: [config.supercell[0], val, config.supercell[2]] });
+                    const raw = e.target.value;
+                    if (raw === "") {
+                      setConfig({ ...config, supercell: [config.supercell[0], "", config.supercell[2]] });
+                    } else {
+                      const val = parseInt(raw);
+                      if (!isNaN(val)) setConfig({ ...config, supercell: [config.supercell[0], val, config.supercell[2]] });
+                    }
                   }}
-                  style={{ width: '40px', textAlign: 'center', backgroundColor: 'var(--panel-bg)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '4px' }}
+                  onBlur={(e) => {
+                    let val = parseInt(e.target.value);
+                    if (isNaN(val) || val <= 0) val = 1;
+                    if (val !== config.supercell[1]) setConfig({ ...config, supercell: [config.supercell[0], val, config.supercell[2]] });
+                  }}
+                  style={{ borderLeft: 'none' }}
+                  title="Y"
                 />
                 <input
                   type="number"
@@ -819,13 +855,24 @@ function App() {
                   step="1"
                   value={config.supercell[2]}
                   onChange={(e) => {
-                    const val = parseInt(e.target.value);
-                    if (!isNaN(val) && val > 0) setConfig({ ...config, supercell: [config.supercell[0], config.supercell[1], val] });
+                    const raw = e.target.value;
+                    if (raw === "") {
+                      setConfig({ ...config, supercell: [config.supercell[0], config.supercell[1], ""] });
+                    } else {
+                      const val = parseInt(raw);
+                      if (!isNaN(val)) setConfig({ ...config, supercell: [config.supercell[0], config.supercell[1], val] });
+                    }
                   }}
-                  style={{ width: '40px', textAlign: 'center', backgroundColor: 'var(--panel-bg)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '4px' }}
+                  onBlur={(e) => {
+                    let val = parseInt(e.target.value);
+                    if (isNaN(val) || val <= 0) val = 1;
+                    if (val !== config.supercell[2]) setConfig({ ...config, supercell: [config.supercell[0], config.supercell[1], val] });
+                  }}
+                  style={{ borderLeft: 'none', borderRight: 'none' }}
+                  title="Z"
                 />
               </div>
-            </label>
+            </div>
           </div>
 
           <div className="cli-section">
