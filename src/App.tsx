@@ -70,6 +70,7 @@ function App() {
     axes_display: "default",
     supercell: [1, 1, 1] as (number | string)[],
     highlights: [] as { regions: string, color: string }[],
+    unwrap: true,
   });
   const [showExamples, setShowExamples] = useState(false);
 
@@ -349,6 +350,8 @@ function App() {
     if (scX !== 1 || scY !== 1 || scZ !== 1) {
       cmd += ` --supercell ${scX}x${scY}x${scZ}`;
     }
+
+    if (config.unwrap) cmd += ` --unwrap`;
 
     if (config.highlights) {
       config.highlights.forEach(h => {
@@ -888,6 +891,15 @@ function App() {
                 />
               </div>
             </div>
+
+            <label className="checkbox-label" style={{ marginTop: '12px' }}>
+              <input
+                type="checkbox"
+                checked={config.unwrap}
+                onChange={(e) => setConfig({ ...config, unwrap: e.target.checked })}
+              />
+              <span>Unwrap Molecules</span>
+            </label>
           </div>
 
           <div className="cli-section">

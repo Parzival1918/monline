@@ -18,25 +18,25 @@ const captureCameraState = (plugin: PluginUIContext, onRotationChange: (matrix: 
   const state = plugin.canvas3d?.camera.state;
   if (state) {
     const { position, target, up } = state;
-    
+
     // Z = pos - target
     const zx = position[0] - target[0];
     const zy = position[1] - target[1];
     const zz = position[2] - target[2];
-    const zLen = Math.sqrt(zx*zx + zy*zy + zz*zz) || 1;
-    const Z = [zx/zLen, zy/zLen, zz/zLen];
+    const zLen = Math.sqrt(zx * zx + zy * zy + zz * zz) || 1;
+    const Z = [zx / zLen, zy / zLen, zz / zLen];
 
     // X = up x Z
-    const xx = up[1]*Z[2] - up[2]*Z[1];
-    const xy = up[2]*Z[0] - up[0]*Z[2];
-    const xz = up[0]*Z[1] - up[1]*Z[0];
-    const xLen = Math.sqrt(xx*xx + xy*xy + xz*xz) || 1;
-    const X = [xx/xLen, xy/xLen, xz/xLen];
+    const xx = up[1] * Z[2] - up[2] * Z[1];
+    const xy = up[2] * Z[0] - up[0] * Z[2];
+    const xz = up[0] * Z[1] - up[1] * Z[0];
+    const xLen = Math.sqrt(xx * xx + xy * xy + xz * xz) || 1;
+    const X = [xx / xLen, xy / xLen, xz / xLen];
 
     // Y = Z x X
-    const yx = Z[1]*X[2] - Z[2]*X[1];
-    const yy = Z[2]*X[0] - Z[0]*X[2];
-    const yz = Z[0]*X[1] - Z[1]*X[0];
+    const yx = Z[1] * X[2] - Z[2] * X[1];
+    const yy = Z[2] * X[0] - Z[0] * X[2];
+    const yz = Z[0] * X[1] - Z[1] * X[0];
     const Y = [yx, yy, yz];
 
     // Matrix [X, Y, Z] transposed
@@ -111,14 +111,14 @@ const MolstarViewer: React.FC<MolstarViewerProps> = ({ fileContent, filename, sh
   useEffect(() => {
     // Load structure when fileContent or plugin changes
     if (!pluginReady || !pluginRef.current || !fileContent) return;
-    
+
     const loadStructure = async () => {
       const plugin = pluginRef.current!;
       plugin.clear();
-      
+
       try {
         const data = await plugin.builders.data.rawData({ data: fileContent });
-        
+
         let format: string = 'xyz';
         const ext = filename.split('.').pop()?.toLowerCase();
         if (ext === 'mol' || ext === 'sdf') format = 'sdf';
@@ -126,7 +126,7 @@ const MolstarViewer: React.FC<MolstarViewerProps> = ({ fileContent, filename, sh
         else if (ext === 'cif') format = 'cifCore';
 
         const trajectory = await plugin.builders.structure.parseTrajectory(data, format as any);
-        
+
         let applyParams: any = {};
         if (showUnitCell) {
           applyParams.structure = {
@@ -136,14 +136,14 @@ const MolstarViewer: React.FC<MolstarViewerProps> = ({ fileContent, filename, sh
         }
 
         await plugin.builders.structure.hierarchy.applyPreset(trajectory, 'default', applyParams);
-        
+
         if (showUnitCell) {
           const models = plugin.managers.structure.hierarchy.current.models;
           if (models && models.length > 0) {
             await plugin.build().to(models[0].cell).apply(StateTransforms.Representation.ModelUnitcell3D).commit();
           }
         }
-        
+
         // Wait a small tick to ensure camera animations finish setting up
         setTimeout(() => {
           if (pluginRef.current) {
