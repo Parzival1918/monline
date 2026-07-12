@@ -46,14 +46,14 @@ function App() {
   const [filename, setFilename] = useState<string>("molecule.xyz");
   const [fileFormat, setFileFormat] = useState<string>("auto");
   const [viewMode, setViewMode] = useState<'interactive' | 'svg' | 'log'>('interactive');
-  const [logs, setLogs] = useState<{timestamp: Date, type: 'info' | 'error', message: string}[]>([]);
+  const [logs, setLogs] = useState<{ timestamp: Date, type: 'info' | 'error', message: string }[]>([]);
   const [config, setConfig] = useState({
     preset: "default",
     atom_scale: 2.5,
     bond_width: 20,
     background: "#ffffff",
     transparent: true,
-    orientationMode: "auto",
+    orientationMode: "interactive",
     hide_bonds: false,
     hydrogen_display: "default",
     bo: false,
@@ -386,17 +386,17 @@ function App() {
               <span>Choose File</span>
             </label>
             <div style={{ marginTop: '12px' }}>
-              <button 
+              <button
                 onClick={() => setShowExamples(!showExamples)}
                 style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.875rem', padding: '4px 0', display: 'flex', alignItems: 'center', gap: '4px' }}
               >
                 {showExamples ? '▼ Hide Examples' : '▶ Show Examples'}
               </button>
-              <div 
-                style={{ 
-                  display: 'grid', 
+              <div
+                style={{
+                  display: 'grid',
                   gridTemplateColumns: '1fr 1fr',
-                  gap: '8px', 
+                  gap: '8px',
                   overflow: 'hidden',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   maxHeight: showExamples ? '200px' : '0',
@@ -404,7 +404,7 @@ function App() {
                   marginTop: showExamples ? '8px' : '0'
                 }}
               >
-                <button 
+                <button
                   className="example-btn"
                   onClick={() => { setFileContent(BENZENE_XYZ); setFilename('benzene.xyz'); setFileFormat('xyz'); }}
                   style={{ padding: '8px', borderRadius: '4px', background: 'var(--bg-main)', color: 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', fontSize: '0.75rem' }}
@@ -413,7 +413,7 @@ function App() {
                 >
                   Benzene Molecule
                 </button>
-                <button 
+                <button
                   className="example-btn"
                   onClick={() => { setFileContent(WATER_XYZ); setFilename('water.xyz'); setFileFormat('xyz'); }}
                   style={{ padding: '8px', borderRadius: '4px', background: 'var(--bg-main)', color: 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', fontSize: '0.75rem' }}
@@ -422,7 +422,7 @@ function App() {
                 >
                   Water Molecule
                 </button>
-                <button 
+                <button
                   className="example-btn"
                   onClick={() => { setFileContent(BENZENE_CIF); setFilename('benzene.cif'); setFileFormat('cif'); }}
                   style={{ padding: '8px', borderRadius: '4px', background: 'var(--bg-main)', color: 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', fontSize: '0.75rem' }}
@@ -431,7 +431,7 @@ function App() {
                 >
                   Benzene Crystal
                 </button>
-                <button 
+                <button
                   className="example-btn"
                   onClick={() => { setFileContent(NACL_CIF); setFilename('nacl.cif'); setFileFormat('cif'); }}
                   style={{ padding: '8px', borderRadius: '4px', background: 'var(--bg-main)', color: 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', fontSize: '0.75rem' }}
@@ -440,7 +440,7 @@ function App() {
                 >
                   NaCl Crystal
                 </button>
-                <button 
+                <button
                   className="example-btn"
                   onClick={() => { setFileContent(SILICON_CIF); setFilename('silicon.cif'); setFileFormat('cif'); }}
                   style={{ padding: '8px', borderRadius: '4px', background: 'var(--bg-main)', color: 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', fontSize: '0.75rem', gridColumn: 'span 2' }}
@@ -1020,20 +1020,20 @@ function App() {
                 </div>
               )}
             </div>
-            <div 
+            <div
               ref={logsContainerRef}
               style={{
-              visibility: viewMode === 'log' ? 'visible' : 'hidden',
-              opacity: viewMode === 'log' ? 1 : 0,
-              position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-              transition: 'opacity 0.2s',
-              zIndex: viewMode === 'log' ? 2 : 1,
-              backgroundColor: 'var(--panel-bg)',
-              overflowY: 'auto',
-              padding: '16px',
-              fontFamily: 'monospace',
-              fontSize: '0.875rem'
-            }}>
+                visibility: viewMode === 'log' ? 'visible' : 'hidden',
+                opacity: viewMode === 'log' ? 1 : 0,
+                position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                transition: 'opacity 0.2s',
+                zIndex: viewMode === 'log' ? 2 : 1,
+                backgroundColor: 'var(--panel-bg)',
+                overflowY: 'auto',
+                padding: '16px',
+                fontFamily: 'monospace',
+                fontSize: '0.875rem'
+              }}>
               {logs.length > 0 ? (
                 <div className="log-container">
                   {logs.map((log, i) => (
