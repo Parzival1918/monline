@@ -78,6 +78,13 @@ function App() {
   const resolvesRef = useRef<Record<number, (val: any) => void>>({});
   const rejectsRef = useRef<Record<number, (err: any) => void>>({});
   const rotMatrixRef = useRef<number[] | null>(null);
+  const logsContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (viewMode === 'log' && logsContainerRef.current) {
+      logsContainerRef.current.scrollTop = logsContainerRef.current.scrollHeight;
+    }
+  }, [viewMode, logs]);
 
   useEffect(() => {
     // Initialize Web Worker using Vite's BASE_URL with cache busting
@@ -1013,7 +1020,9 @@ function App() {
                 </div>
               )}
             </div>
-            <div style={{
+            <div 
+              ref={logsContainerRef}
+              style={{
               visibility: viewMode === 'log' ? 'visible' : 'hidden',
               opacity: viewMode === 'log' ? 1 : 0,
               position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
